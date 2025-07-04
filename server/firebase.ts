@@ -13,21 +13,29 @@ const firebaseConfig = {
 
 // Function to format private key properly
 function formatPrivateKey(key: string | undefined): string | undefined {
-  if (!key) return undefined;
+  if (!key) {
+    console.error('No private key provided');
+    return undefined;
+  }
   
   let formattedKey = key;
   
-  // Replace escaped newlines with actual newlines
-  formattedKey = formattedKey.replace(/\\n/g, '\n');
+  // Handle multiple escape patterns
+  formattedKey = formattedKey
+    .replace(/\\\\n/g, '\n')  // Double escaped
+    .replace(/\\n/g, '\n')    // Single escaped
+    .trim();
   
-  // Remove any extra whitespace
-  formattedKey = formattedKey.trim();
+  // Debug the key format
+  console.log('Private key format check:');
+  console.log('- Key length:', formattedKey.length);
+  console.log('- Starts with BEGIN:', formattedKey.includes('-----BEGIN PRIVATE KEY-----'));
+  console.log('- Ends with END:', formattedKey.includes('-----END PRIVATE KEY-----'));
+  console.log('- Contains newlines:', formattedKey.includes('\n'));
   
-  // Ensure proper formatting
   if (!formattedKey.includes('-----BEGIN PRIVATE KEY-----')) {
-    console.error('Private key format issue - missing BEGIN marker');
-    // Log first few characters to help debug (but not the full key for security)
-    console.error('Key starts with:', formattedKey.substring(0, 50) + '...');
+    console.error('Private key missing BEGIN marker');
+    console.error('Key preview:', formattedKey.substring(0, 100) + '...');
   }
   
   return formattedKey;

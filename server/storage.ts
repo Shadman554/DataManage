@@ -238,11 +238,28 @@ export class FirebaseStorage implements IStorage {
 class HybridStorage implements IStorage {
   private firebaseStorage: FirebaseStorage;
   private fallbackStorage: FallbackStorage;
-  private useFirebase: boolean = true;
+  private useFirebase: boolean = false; // Temporarily disabled until connection is fixed
 
   constructor() {
     this.firebaseStorage = new FirebaseStorage();
     this.fallbackStorage = new FallbackStorage();
+  }
+
+  // Method to enable Firebase (call this when credentials are working)
+  enableFirebase() {
+    console.log('Enabling Firebase storage...');
+    this.useFirebase = true;
+  }
+
+  // Method to disable Firebase (fallback to JSON)
+  disableFirebase() {
+    console.log('Disabling Firebase storage, using fallback...');
+    this.useFirebase = false;
+  }
+
+  // Check current storage mode
+  getStorageMode() {
+    return this.useFirebase ? 'firebase' : 'fallback';
   }
 
   private async executeWithFallback<T>(
@@ -250,13 +267,17 @@ class HybridStorage implements IStorage {
     fallbackOperation: () => Promise<T>
   ): Promise<T> {
     if (!this.useFirebase) {
+      console.log('Using fallback storage (Firebase disabled)');
       return fallbackOperation();
     }
 
     try {
-      return await firebaseOperation();
+      console.log('Attempting Firebase operation...');
+      const result = await firebaseOperation();
+      console.log('Firebase operation successful');
+      return result;
     } catch (error) {
-      console.warn('Firebase operation failed, using fallback data:', error);
+      console.error('Firebase operation failed, switching to fallback:', error.message);
       this.useFirebase = false;
       return fallbackOperation();
     }
