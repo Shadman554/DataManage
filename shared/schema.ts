@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { pgTable, text, varchar, timestamp, boolean, integer, uuid } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 // Base timestamp schema
 export const timestampSchema = z.object({
@@ -195,3 +197,125 @@ export type CollectionData = {
   normalRanges: NormalRange[];
   appLinks: AppLink[];
 };
+
+// ===== ADMIN AUTHENTICATION SYSTEM =====
+
+// Admin Users Table
+export const adminUsers = pgTable('admin_users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  username: varchar('username', { length: 50 }).unique().notNull(),
+  email: varchar('email', { length: 255 }).unique().notNull(),
+  password: varchar('password', { length: 255 }).notNull(),
+  role: varchar('role', { length: 20 }).notNull().default('admin'), // 'super_admin' or 'admin'
+  firstName: varchar('first_name', { length: 100 }),
+  lastName: varchar('last_name', { length: 100 }),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  lastLoginAt: timestamp('last_login_at'),
+});
+
+// Activity Logs Table
+export const activityLogs = pgTable('activity_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  adminId: uuid('admin_id').references(() => adminUsers.id).notNull(),
+  action: varchar('action', { length: 50 }).notNull(), // 'create', 'update', 'delete'
+  collection: varchar('collection', { length: 50 }).notNull(),
+  documentId: varchar('document_id', { length: 255 }).notNull(),
+  documentTitle: varchar('document_title', { length: 500 }),
+  oldData: text('old_data'), // JSON string of previous data (for updates/deletes)
+  newData: text('new_data'), // JSON string of new data (for creates/updates)
+  timestamp: timestamp('timestamp').defaultNow(),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+});
+
+// Admin Sessions Table
+export const adminSessions = pgTable('admin_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  adminId: uuid('admin_id').references(() => adminUsers.id).notNull(),
+  sessionToken: varchar('session_token', { length: 255 }).unique().notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+});
+
+// Relations
+export const adminUsersRelations = relations(adminUsers, ({ many }) => ({
+  activityLogs: many(activityLogs),
+  sessions: many(adminSessions),
+}));
+
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  admin: one(adminUsers, {
+    fields: [activityLogs.adminId],
+    references: [adminUsers.id],
+  }),
+}));
+
+export const adminSessionsRelations = relations(adminSessions, ({ one }) => ({
+  admin: one(adminUsers, {
+    fields: [adminSessions.adminId],
+    references: [adminUsers.id],
+  }),
+}));
+
+// Zod schemas for validation
+export const adminUserSchema = z.object({
+  id: z.string().uuid(),
+  username: z.string().min(3).max(50),
+  email: z.string().email(),
+  password: z.string().min(8),
+  role: z.enum(['super_admin', 'admin']),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  isActive: z.boolean().default(true),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  lastLoginAt: z.date().optional(),
+});
+
+export const activityLogSchema = z.object({
+  id: z.string().uuid(),
+  adminId: z.string().uuid(),
+  action: z.enum(['create', 'update', 'delete']),
+  collection: z.string().max(50),
+  documentId: z.string().max(255),
+  documentTitle: z.string().max(500).optional(),
+  oldData: z.string().optional(),
+  newData: z.string().optional(),
+  timestamp: z.date(),
+  ipAddress: z.string().max(45).optional(),
+  userAgent: z.string().optional(),
+});
+
+export const adminSessionSchema = z.object({
+  id: z.string().uuid(),
+  adminId: z.string().uuid(),
+  sessionToken: z.string().max(255),
+  expiresAt: z.date(),
+  createdAt: z.date(),
+  ipAddress: z.string().max(45).optional(),
+  userAgent: z.string().optional(),
+});
+
+// Insert schemas
+export const insertAdminUserSchema = adminUserSchema.omit({ id: true, createdAt: true, updatedAt: true, lastLoginAt: true });
+export const insertActivityLogSchema = activityLogSchema.omit({ id: true, timestamp: true });
+export const insertAdminSessionSchema = adminSessionSchema.omit({ id: true, createdAt: true });
+
+// Login schema
+export const loginSchema = z.object({
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+// Types
+export type AdminUser = z.infer<typeof adminUserSchema>;
+export type ActivityLog = z.infer<typeof activityLogSchema>;
+export type AdminSession = z.infer<typeof adminSessionSchema>;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+export type InsertAdminSession = z.infer<typeof insertAdminSessionSchema>;
+export type LoginData = z.infer<typeof loginSchema>;
