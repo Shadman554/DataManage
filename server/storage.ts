@@ -1,4 +1,3 @@
-import { db } from './firebase';
 import { FallbackStorage } from './storage-fallback';
 import type { 
   Book, Word, Disease, Drug, TutorialVideo, Staff, Question, 
@@ -46,6 +45,20 @@ export interface IStorage {
 }
 
 export class FirebaseStorage implements IStorage {
+  private db: any = null;
+  
+  private async initializeFirebase() {
+    if (!this.db) {
+      try {
+        const { db } = await import('./firebase');
+        this.db = db;
+      } catch (error) {
+        console.error('Failed to initialize Firebase:', error);
+        throw error;
+      }
+    }
+  }
+
   private generateId(): string {
     return Date.now().toString();
   }
@@ -56,8 +69,9 @@ export class FirebaseStorage implements IStorage {
 
   async getCollection<T>(collectionName: CollectionName): Promise<T[]> {
     try {
-      const snapshot = await db.collection(collectionName).get();
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+      await this.initializeFirebase();
+      const snapshot = await this.db.collection(collectionName).get();
+      return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as T));
     } catch (error) {
       console.error(`Error getting ${collectionName}:`, error);
       throw error;
@@ -66,7 +80,8 @@ export class FirebaseStorage implements IStorage {
 
   async getDocument<T>(collectionName: CollectionName, id: string): Promise<T | null> {
     try {
-      const doc = await db.collection(collectionName).doc(id).get();
+      await this.initializeFirebase();
+      const doc = await this.db.collection(collectionName).doc(id).get();
       if (!doc.exists) return null;
       return { id: doc.id, ...doc.data() } as T;
     } catch (error) {
@@ -77,6 +92,7 @@ export class FirebaseStorage implements IStorage {
 
   async createDocument<T>(collectionName: CollectionName, data: any): Promise<T> {
     try {
+      await this.initializeFirebase();
       const id = this.generateId();
       const docData = {
         ...data,
@@ -84,7 +100,7 @@ export class FirebaseStorage implements IStorage {
         _exportedAt: this.getExportedAt(),
       };
       
-      await db.collection(collectionName).doc(id).set(docData);
+      await this.db.collection(collectionName).doc(id).set(docData);
       return docData as T;
     } catch (error) {
       console.error(`Error creating document in ${collectionName}:`, error);
@@ -94,12 +110,13 @@ export class FirebaseStorage implements IStorage {
 
   async updateDocument<T>(collectionName: CollectionName, id: string, data: any): Promise<T> {
     try {
+      await this.initializeFirebase();
       const updateData = {
         ...data,
         _exportedAt: this.getExportedAt(),
       };
       
-      await db.collection(collectionName).doc(id).update(updateData);
+      await this.db.collection(collectionName).doc(id).update(updateData);
       
       const updatedDoc = await this.getDocument<T>(collectionName, id);
       return updatedDoc as T;
@@ -111,7 +128,8 @@ export class FirebaseStorage implements IStorage {
 
   async deleteDocument(collectionName: CollectionName, id: string): Promise<void> {
     try {
-      await db.collection(collectionName).doc(id).delete();
+      await this.initializeFirebase();
+      await this.db.collection(collectionName).doc(id).delete();
     } catch (error) {
       console.error(`Error deleting document ${id} from ${collectionName}:`, error);
       throw error;
@@ -120,18 +138,19 @@ export class FirebaseStorage implements IStorage {
 
   async searchCollection<T>(collectionName: CollectionName, query: string, field?: string): Promise<T[]> {
     try {
-      let dbQuery = db.collection(collectionName);
+      await this.initializeFirebase();
+      let dbQuery = this.db.collection(collectionName);
       
       if (field) {
         dbQuery = dbQuery.where(field, '>=', query).where(field, '<=', query + '\uf8ff');
       }
       
       const snapshot = await dbQuery.get();
-      const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+      const results = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as T));
       
       // If no field specified, search across multiple fields
       if (!field && query) {
-        return results.filter(item => {
+        return results.filter((item: any) => {
           const searchText = JSON.stringify(item).toLowerCase();
           return searchText.includes(query.toLowerCase());
         });
