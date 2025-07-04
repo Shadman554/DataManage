@@ -14,7 +14,23 @@ const firebaseConfig = {
 // Function to format private key properly
 function formatPrivateKey(key: string | undefined): string | undefined {
   if (!key) return undefined;
-  return key.replace(/\\n/g, '\n');
+  
+  let formattedKey = key;
+  
+  // Replace escaped newlines with actual newlines
+  formattedKey = formattedKey.replace(/\\n/g, '\n');
+  
+  // Remove any extra whitespace
+  formattedKey = formattedKey.trim();
+  
+  // Ensure proper formatting
+  if (!formattedKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    console.error('Private key format issue - missing BEGIN marker');
+    // Log first few characters to help debug (but not the full key for security)
+    console.error('Key starts with:', formattedKey.substring(0, 50) + '...');
+  }
+  
+  return formattedKey;
 }
 
 const serviceAccount = {
@@ -32,16 +48,28 @@ const serviceAccount = {
 
 // Validate required fields
 if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
+  console.error('Missing Firebase configuration:', {
+    project_id: !!serviceAccount.project_id,
+    private_key: !!serviceAccount.private_key,
+    client_email: !!serviceAccount.client_email
+  });
   throw new Error('Missing required Firebase configuration. Please check your environment variables.');
 }
 
 // Initialize Firebase Admin SDK
 let app;
 if (getApps().length === 0) {
-  app = initializeApp({
-    credential: cert(serviceAccount as any),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  });
+  try {
+    console.log('Initializing Firebase Admin SDK...');
+    app = initializeApp({
+      credential: cert(serviceAccount as any),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    });
+    console.log('Firebase Admin SDK initialized successfully');
+  } catch (error) {
+    console.error('Firebase initialization failed:', error);
+    throw error;
+  }
 } else {
   app = getApps()[0];
 }

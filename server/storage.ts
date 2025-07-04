@@ -1,4 +1,5 @@
 import { db } from './firebase';
+import { FallbackStorage } from './storage-fallback';
 import type { 
   Book, Word, Disease, Drug, TutorialVideo, Staff, Question, 
   Notification, User, NormalRange, AppLink,
@@ -233,4 +234,100 @@ export class FirebaseStorage implements IStorage {
   }
 }
 
-export const storage = new FirebaseStorage();
+// Create a hybrid storage that uses Firebase with fallback to JSON data
+class HybridStorage implements IStorage {
+  private firebaseStorage: FirebaseStorage;
+  private fallbackStorage: FallbackStorage;
+  private useFirebase: boolean = true;
+
+  constructor() {
+    this.firebaseStorage = new FirebaseStorage();
+    this.fallbackStorage = new FallbackStorage();
+  }
+
+  private async executeWithFallback<T>(
+    firebaseOperation: () => Promise<T>,
+    fallbackOperation: () => Promise<T>
+  ): Promise<T> {
+    if (!this.useFirebase) {
+      return fallbackOperation();
+    }
+
+    try {
+      return await firebaseOperation();
+    } catch (error) {
+      console.warn('Firebase operation failed, using fallback data:', error);
+      this.useFirebase = false;
+      return fallbackOperation();
+    }
+  }
+
+  async getCollection<T>(collectionName: CollectionName): Promise<T[]> {
+    return this.executeWithFallback(
+      () => this.firebaseStorage.getCollection<T>(collectionName),
+      () => this.fallbackStorage.getCollection<T>(collectionName)
+    );
+  }
+
+  async getDocument<T>(collectionName: CollectionName, id: string): Promise<T | null> {
+    return this.executeWithFallback(
+      () => this.firebaseStorage.getDocument<T>(collectionName, id),
+      () => this.fallbackStorage.getDocument<T>(collectionName, id)
+    );
+  }
+
+  async createDocument<T>(collectionName: CollectionName, data: any): Promise<T> {
+    return this.executeWithFallback(
+      () => this.firebaseStorage.createDocument<T>(collectionName, data),
+      () => this.fallbackStorage.createDocument<T>(collectionName, data)
+    );
+  }
+
+  async updateDocument<T>(collectionName: CollectionName, id: string, data: any): Promise<T> {
+    return this.executeWithFallback(
+      () => this.firebaseStorage.updateDocument<T>(collectionName, id, data),
+      () => this.fallbackStorage.updateDocument<T>(collectionName, id, data)
+    );
+  }
+
+  async deleteDocument(collectionName: CollectionName, id: string): Promise<void> {
+    return this.executeWithFallback(
+      () => this.firebaseStorage.deleteDocument(collectionName, id),
+      () => this.fallbackStorage.deleteDocument(collectionName, id)
+    );
+  }
+
+  async searchCollection<T>(collectionName: CollectionName, query: string, field?: string): Promise<T[]> {
+    return this.executeWithFallback(
+      () => this.firebaseStorage.searchCollection<T>(collectionName, query, field),
+      () => this.fallbackStorage.searchCollection<T>(collectionName, query, field)
+    );
+  }
+
+  // Specific collection methods
+  async getBooks(): Promise<Book[]> { return this.getCollection('books'); }
+  async getWords(): Promise<Word[]> { return this.getCollection('words'); }
+  async getDiseases(): Promise<Disease[]> { return this.getCollection('diseases'); }
+  async getDrugs(): Promise<Drug[]> { return this.getCollection('drugs'); }
+  async getTutorialVideos(): Promise<TutorialVideo[]> { return this.getCollection('tutorialVideos'); }
+  async getStaff(): Promise<Staff[]> { return this.getCollection('staff'); }
+  async getQuestions(): Promise<Question[]> { return this.getCollection('questions'); }
+  async getNotifications(): Promise<Notification[]> { return this.getCollection('notifications'); }
+  async getUsers(): Promise<User[]> { return this.getCollection('users'); }
+  async getNormalRanges(): Promise<NormalRange[]> { return this.getCollection('normalRanges'); }
+  async getAppLinks(): Promise<AppLink[]> { return this.getCollection('appLinks'); }
+
+  async createBook(book: InsertBook): Promise<Book> { return this.createDocument('books', book); }
+  async createWord(word: InsertWord): Promise<Word> { return this.createDocument('words', word); }
+  async createDisease(disease: InsertDisease): Promise<Disease> { return this.createDocument('diseases', disease); }
+  async createDrug(drug: InsertDrug): Promise<Drug> { return this.createDocument('drugs', drug); }
+  async createTutorialVideo(video: InsertTutorialVideo): Promise<TutorialVideo> { return this.createDocument('tutorialVideos', video); }
+  async createStaff(staff: InsertStaff): Promise<Staff> { return this.createDocument('staff', staff); }
+  async createQuestion(question: InsertQuestion): Promise<Question> { return this.createDocument('questions', question); }
+  async createNotification(notification: InsertNotification): Promise<Notification> { return this.createDocument('notifications', notification); }
+  async createUser(user: InsertUser): Promise<User> { return this.createDocument('users', user); }
+  async createNormalRange(range: InsertNormalRange): Promise<NormalRange> { return this.createDocument('normalRanges', range); }
+  async createAppLink(link: InsertAppLink): Promise<AppLink> { return this.createDocument('appLinks', link); }
+}
+
+export const storage = new HybridStorage();
