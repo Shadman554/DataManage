@@ -170,12 +170,13 @@ export function DataTable({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle>{config.displayName} Collection</CardTitle>
+          <CardTitle className="text-lg md:text-xl">{config.displayName}</CardTitle>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">{filteredData.length} items</span>
-            <div className="flex items-center space-x-1">
+            {/* View mode toggle for desktop only */}
+            <div className="hidden md:flex items-center space-x-1">
               <Button
                 variant={viewMode === 'table' ? 'default' : 'outline'}
                 size="sm"
@@ -196,7 +197,60 @@ export function DataTable({
       </CardHeader>
       
       <CardContent>
-        <div className="overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {paginatedData.map((item) => (
+            <Card key={item.id} className="border border-gray-200">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={selectedItems.includes(item.id)}
+                      onCheckedChange={(checked) => handleSelectItem(item.id, checked as boolean)}
+                    />
+                    <Badge variant="secondary" className="text-xs">
+                      {item.id.slice(0, 8)}...
+                    </Badge>
+                  </div>
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(item)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(item)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  {displayFields.map((field) => (
+                    <div key={field} className="flex flex-col">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        {field.charAt(0).toUpperCase() + field.slice(1)}
+                      </span>
+                      <span className="text-sm text-gray-900 break-words">
+                        {formatValue((item as any)[field], field)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -229,9 +283,9 @@ export function DataTable({
                   {displayFields.map(field => (
                     <TableCell key={field}>
                       {field === 'coverImageUrl' || field === 'photo' || field === 'imageUrl' ? (
-                        item[field] ? (
+                        (item as any)[field] ? (
                           <img 
-                            src={item[field]} 
+                            src={(item as any)[field]} 
                             alt="Preview" 
                             className="h-10 w-10 rounded object-cover"
                           />
@@ -241,8 +295,8 @@ export function DataTable({
                           </div>
                         )
                       ) : (
-                        <div className="max-w-xs truncate" title={String(item[field])}>
-                          {formatValue(item[field], field)}
+                        <div className="max-w-xs truncate" title={String((item as any)[field])}>
+                          {formatValue((item as any)[field], field)}
                         </div>
                       )}
                     </TableCell>
@@ -288,56 +342,101 @@ export function DataTable({
         </div>
         
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">
-              Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} entries
-            </span>
-            <select 
-              value={itemsPerPage} 
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="px-3 py-1 border border-gray-300 rounded text-sm"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-            <span className="text-sm text-gray-500">per page</span>
+        <div className="mt-4 pt-4 border-t">
+          {/* Mobile Pagination */}
+          <div className="md:hidden flex flex-col space-y-3">
+            <div className="text-center">
+              <span className="text-sm text-gray-500">
+                Page {currentPage} of {totalPages} ({filteredData.length} total)
+              </span>
+            </div>
+            <div className="flex justify-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="flex-1 max-w-24"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="flex-1 max-w-24"
+              >
+                Next
+              </Button>
+            </div>
+            <div className="flex justify-center items-center space-x-2">
+              <span className="text-sm text-gray-500">Show:</span>
+              <select 
+                value={itemsPerPage} 
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="px-2 py-1 border border-gray-300 rounded text-sm"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+              </select>
+              <span className="text-sm text-gray-500">per page</span>
+            </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
+
+          {/* Desktop Pagination */}
+          <div className="hidden md:flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">
+                Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} entries
+              </span>
+              <select 
+                value={itemsPerPage} 
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="px-3 py-1 border border-gray-300 rounded text-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm text-gray-500">per page</span>
+            </div>
             
-            {[...Array(Math.min(5, totalPages))].map((_, i) => {
-              const page = i + 1;
-              return (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </Button>
-              );
-            })}
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              
+              {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                const page = i + 1;
+                return (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </Button>
+                );
+              })}
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

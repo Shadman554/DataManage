@@ -28,9 +28,11 @@ const iconMap = {
 interface SidebarProps {
   activeCollection: CollectionName;
   onCollectionChange: (collection: CollectionName) => void;
+  currentView: 'collections' | 'settings';
+  onViewChange: (view: 'collections' | 'settings') => void;
 }
 
-export function Sidebar({ activeCollection, onCollectionChange }: SidebarProps) {
+export function Sidebar({ activeCollection, onCollectionChange, currentView, onViewChange }: SidebarProps) {
   const getCollectionCount = (collection: CollectionName) => {
     const { data } = useCollection(collection);
     return data?.length || 0;
@@ -42,10 +44,10 @@ export function Sidebar({ activeCollection, onCollectionChange }: SidebarProps) 
   };
 
   return (
-    <aside className="w-64 bg-white shadow-lg flex-shrink-0 border-r border-gray-200">
+    <aside className="hidden md:flex w-64 bg-white shadow-lg flex-shrink-0 border-r border-gray-200 flex-col">
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-primary">Firebase Admin</h1>
-        <p className="text-sm text-gray-500">Management System</p>
+        <h1 className="text-xl font-bold text-primary">Vet Dictionary</h1>
+        <p className="text-sm text-gray-500">Admin Panel</p>
       </div>
       
       <ScrollArea className="flex-1">
@@ -70,7 +72,10 @@ export function Sidebar({ activeCollection, onCollectionChange }: SidebarProps) 
                         ? 'text-primary bg-blue-50' 
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
-                    onClick={() => onCollectionChange(collection)}
+                    onClick={() => {
+                      onCollectionChange(collection);
+                      onViewChange('collections');
+                    }}
                   >
                     <Icon className="mr-3 h-4 w-4" />
                     {config.displayName}
@@ -94,19 +99,44 @@ export function Sidebar({ activeCollection, onCollectionChange }: SidebarProps) 
           
           <ul className="space-y-1 px-3">
             <li>
-              <Button variant="ghost" className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <Button 
+                variant={currentView === 'settings' ? "secondary" : "ghost"} 
+                className={`w-full justify-start px-3 py-2 text-sm font-medium ${
+                  currentView === 'settings' 
+                    ? 'text-primary bg-blue-50' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                onClick={() => onViewChange('settings')}
+              >
                 <Settings className="mr-3 h-4 w-4" />
                 Settings
               </Button>
             </li>
             <li>
-              <Button variant="ghost" className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onClick={() => {
+                  fetch('/api/system/export', { method: 'POST' })
+                    .then(response => response.blob())
+                    .then(blob => {
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `veterinary-data-${new Date().toISOString().split('T')[0]}.json`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      window.URL.revokeObjectURL(url);
+                    });
+                }}
+              >
                 <Download className="mr-3 h-4 w-4" />
                 Export Data
               </Button>
             </li>
             <li>
-              <Button variant="ghost" className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <Button variant="ghost" className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" disabled>
                 <Upload className="mr-3 h-4 w-4" />
                 Import Data
               </Button>

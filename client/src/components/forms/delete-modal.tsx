@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useDeleteDocument, useBulkOperation } from '@/hooks/use-firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -94,15 +94,12 @@ export function DeleteModal({
             <AlertTriangle className="h-5 w-5 text-yellow-500" />
             {getTitle()}
           </DialogTitle>
+          <DialogDescription>
+            {getMessage()}
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
-          <p className="text-sm text-gray-600">
-            {getMessage()}
-          </p>
-        </div>
-        
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 pt-4">
           <Button
             variant="outline"
             onClick={onClose}

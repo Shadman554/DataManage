@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BookForm } from './book-form';
 import { WordForm } from './word-form';
 import { DiseaseForm } from './disease-form';
@@ -57,11 +57,17 @@ export function AddEditModal({ isOpen, onClose, collection, item }: AddEditModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="w-full max-w-4xl max-h-[95vh] mx-2 md:mx-auto overflow-y-auto">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-lg md:text-xl">
             {isEditing ? `Edit ${displayName}` : `Add New ${displayName}`}
           </DialogTitle>
+          <DialogDescription className="text-sm text-gray-600">
+            {isEditing 
+              ? `Modify the details of this ${displayName.toLowerCase()} item.`
+              : `Fill out the form below to create a new ${displayName.toLowerCase()} item.`
+            }
+          </DialogDescription>
         </DialogHeader>
         
         <div className="mt-4">
