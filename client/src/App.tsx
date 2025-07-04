@@ -1,31 +1,19 @@
 import { Switch, Route } from "wouter";
-import { createContext, useState } from "react";
+import { useState } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
-import { AdminLogin } from "@/pages/AdminLogin";
-import { AdminDashboard } from "@/pages/AdminDashboard";
-import { AdminAuthContext, useAdminAuthProvider } from "@/hooks/useAdminAuth";
+import AdminLogin from "@/pages/admin-login";
+import AdminDashboard from "@/pages/admin-dashboard";
+import { useAdmin } from "@/hooks/useAdmin";
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/admin" component={AdminRouter} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+function ProtectedRoute({ component: Component, ...props }: any) {
+  const { admin, isLoading } = useAdmin();
 
-function AdminRouter() {
-  const { admin, isLoading } = useAdminAuthProvider();
-  const [authAttempted, setAuthAttempted] = useState(false);
-
-  if (isLoading && !authAttempted) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -34,35 +22,48 @@ function AdminRouter() {
   }
 
   if (!admin) {
+    return <AdminLogin />;
+  }
+
+  return <Component {...props} />;
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={(props) => <ProtectedRoute component={Dashboard} {...props} />} />
+      <Route path="/dashboard" component={(props) => <ProtectedRoute component={Dashboard} {...props} />} />
+      <Route path="/admin" component={AdminRouter} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function AdminRouter() {
+  const { admin, isLoading } = useAdmin();
+
+  if (isLoading) {
     return (
-      <AdminLogin 
-        onLoginSuccess={() => setAuthAttempted(true)} 
-      />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
     );
+  }
+
+  if (!admin) {
+    return <AdminLogin />;
   }
 
   return <AdminDashboard />;
 }
 
-function AdminAuthProvider({ children }: { children: React.ReactNode }) {
-  const authData = useAdminAuthProvider();
-  
-  return (
-    <AdminAuthContext.Provider value={authData}>
-      {children}
-    </AdminAuthContext.Provider>
-  );
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AdminAuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </AdminAuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

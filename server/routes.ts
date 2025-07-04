@@ -147,6 +147,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update admin (super admin only)
+  app.put("/api/admin/:id", authenticateAdmin, requireSuperAdmin, async (req: AuthRequest, res) => {
+    try {
+      const adminId = req.params.id;
+      const updateData = req.body;
+      
+      // Remove sensitive fields that shouldn't be updated via this endpoint
+      const { password, ...safeUpdateData } = updateData;
+      
+      const updatedAdmin = await AuthService.updateAdmin(adminId, safeUpdateData);
+      if (!updatedAdmin) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+      
+      res.json({
+        admin: {
+          id: updatedAdmin.id,
+          username: updatedAdmin.username,
+          email: updatedAdmin.email,
+          role: updatedAdmin.role,
+          firstName: updatedAdmin.firstName,
+          lastName: updatedAdmin.lastName,
+          isActive: updatedAdmin.isActive,
+        },
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update admin" });
+    }
+  });
+
+  // Delete admin (super admin only)
+  app.delete("/api/admin/:id", authenticateAdmin, requireSuperAdmin, async (req: AuthRequest, res) => {
+    try {
+      const adminId = req.params.id;
+      
+      // Prevent super admin from deleting themselves
+      if (adminId === req.admin!.id) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+      
+      const success = await AuthService.deleteAdmin(adminId);
+      if (!success) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete admin" });
+    }
+  });
+
+  // Toggle admin active status (super admin only)
+  app.post("/api/admin/:id/toggle-status", authenticateAdmin, requireSuperAdmin, async (req: AuthRequest, res) => {
+    try {
+      const adminId = req.params.id;
+      
+      // Prevent super admin from deactivating themselves
+      if (adminId === req.admin!.id) {
+        return res.status(400).json({ error: "Cannot change your own status" });
+      }
+      
+      const updatedAdmin = await AuthService.toggleAdminStatus(adminId);
+      if (!updatedAdmin) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+      
+      res.json({
+        admin: {
+          id: updatedAdmin.id,
+          username: updatedAdmin.username,
+          email: updatedAdmin.email,
+          role: updatedAdmin.role,
+          firstName: updatedAdmin.firstName,
+          lastName: updatedAdmin.lastName,
+          isActive: updatedAdmin.isActive,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to toggle admin status" });
+    }
+  });
+
   // Initialize super admin (development only)
   app.post("/api/admin/init", async (req, res) => {
     try {
@@ -206,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/collections/:collection", async (req, res) => {
+  app.post("/api/collections/:collection", authenticateAdmin, logActivity('create', 'collection'), async (req, res) => {
     try {
       const collection = req.params.collection as CollectionName;
       const data = req.body;
@@ -259,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/collections/:collection/:id", async (req, res) => {
+  app.put("/api/collections/:collection/:id", authenticateAdmin, logActivity('update', 'collection'), async (req, res) => {
     try {
       const collection = req.params.collection as CollectionName;
       const id = req.params.id;
@@ -272,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/collections/:collection/:id", async (req, res) => {
+  app.delete("/api/collections/:collection/:id", authenticateAdmin, logActivity('delete', 'collection'), async (req, res) => {
     try {
       const collection = req.params.collection as CollectionName;
       const id = req.params.id;

@@ -194,34 +194,34 @@ export default function Settings() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      <div className="mb-6">
+    <div className="container mx-auto px-3 md:px-4 py-4 md:py-6 max-w-6xl">
+      <div className="mb-4 md:mb-6">
         <div className="flex items-center space-x-2 mb-2">
-          <SettingsIcon className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-bold">Settings</h1>
+          <SettingsIcon className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
+          <h1 className="text-xl md:text-2xl font-bold">Settings</h1>
         </div>
-        <p className="text-gray-600">Configure your veterinary dictionary admin panel</p>
+        <p className="text-sm md:text-base text-gray-600">Configure your veterinary dictionary admin panel</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="database">Database</TabsTrigger>
-          <TabsTrigger value="backup">Backup & Export</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+          <TabsTrigger value="general" className="text-xs md:text-sm px-2 py-2">General</TabsTrigger>
+          <TabsTrigger value="database" className="text-xs md:text-sm px-2 py-2">Database</TabsTrigger>
+          <TabsTrigger value="backup" className="text-xs md:text-sm px-2 py-2">Backup</TabsTrigger>
+          <TabsTrigger value="system" className="text-xs md:text-sm px-2 py-2">System</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-6">
+        <TabsContent value="general" className="space-y-4 md:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-              <CardDescription>Configure basic system settings</CardDescription>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg md:text-xl">General Settings</CardTitle>
+              <CardDescription className="text-sm">Configure basic system settings</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Firebase Integration</Label>
-                  <p className="text-sm text-gray-500">Enable Firebase for data storage</p>
+            <CardContent className="space-y-4 md:space-y-6">
+              <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0">
+                <div className="space-y-1">
+                  <Label className="text-sm md:text-base">Firebase Integration</Label>
+                  <p className="text-xs md:text-sm text-gray-500">Enable Firebase for data storage</p>
                 </div>
                 <Switch
                   checked={settings?.firebaseEnabled || false}
@@ -231,10 +231,10 @@ export default function Settings() {
 
               <Separator />
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Maintenance Mode</Label>
-                  <p className="text-sm text-gray-500">Enable maintenance mode to prevent data changes</p>
+              <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0">
+                <div className="space-y-1">
+                  <Label className="text-sm md:text-base">Maintenance Mode</Label>
+                  <p className="text-xs md:text-sm text-gray-500">Enable maintenance mode to prevent data changes</p>
                 </div>
                 <Switch
                   checked={settings?.maintenanceMode || false}
@@ -245,30 +245,30 @@ export default function Settings() {
               <Separator />
 
               <div className="space-y-2">
-                <Label className="text-base">Maximum File Size (MB)</Label>
+                <Label className="text-sm md:text-base">Maximum File Size (MB)</Label>
                 <Input
                   type="number"
                   value={settings?.maxFileSize || 10}
                   onChange={(e) => handleSettingChange('maxFileSize', parseInt(e.target.value))}
-                  className="w-32"
+                  className="w-full md:w-32"
                 />
-                <p className="text-sm text-gray-500">Maximum size for uploaded files</p>
+                <p className="text-xs md:text-sm text-gray-500">Maximum size for uploaded files</p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="database" className="space-y-6">
+        <TabsContent value="database" className="space-y-4 md:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Database Status</CardTitle>
-              <CardDescription>Monitor your database connection and performance</CardDescription>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg md:text-xl">Database Status</CardTitle>
+              <CardDescription className="text-sm">Monitor your database connection and performance</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
+            <CardContent className="space-y-4 md:space-y-6">
+              <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0">
+                <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <Label className="text-base">Connection Status</Label>
+                    <Label className="text-sm md:text-base">Connection Status</Label>
                     {getStatusIcon(dbInfo?.status || 'disconnected')}
                   </div>
                   <Badge className={getStatusColor(dbInfo?.status || 'disconnected')}>
@@ -277,8 +277,10 @@ export default function Settings() {
                 </div>
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => testFirebaseMutation.mutate()}
                   disabled={testFirebaseMutation.isPending}
+                  className="w-full md:w-auto"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Test Connection
@@ -289,12 +291,12 @@ export default function Settings() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-sm text-gray-500">Total Records</Label>
-                  <p className="text-2xl font-bold">{dbInfo?.totalRecords || 0}</p>
+                  <Label className="text-xs md:text-sm text-gray-500">Total Records</Label>
+                  <p className="text-xl md:text-2xl font-bold">{dbInfo?.totalRecords || 0}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm text-gray-500">Storage Used</Label>
-                  <p className="text-2xl font-bold">
+                  <Label className="text-xs md:text-sm text-gray-500">Storage Used</Label>
+                  <p className="text-lg md:text-2xl font-bold">
                     {dbInfo?.storageUsed || 0} MB / {dbInfo?.storageLimit || 1000} MB
                   </p>
                 </div>
@@ -303,24 +305,24 @@ export default function Settings() {
               <Separator />
 
               <div className="space-y-2">
-                <Label className="text-sm text-gray-500">Last Backup</Label>
-                <p className="text-base">{dbInfo?.lastBackup || 'Never'}</p>
+                <Label className="text-xs md:text-sm text-gray-500">Last Backup</Label>
+                <p className="text-sm md:text-base">{dbInfo?.lastBackup || 'Never'}</p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="backup" className="space-y-6">
+        <TabsContent value="backup" className="space-y-4 md:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Backup & Export</CardTitle>
-              <CardDescription>Manage your data backups and exports</CardDescription>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg md:text-xl">Backup & Export</CardTitle>
+              <CardDescription className="text-sm">Manage your data backups and exports</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Automatic Backup</Label>
-                  <p className="text-sm text-gray-500">Enable automatic data backups</p>
+            <CardContent className="space-y-4 md:space-y-6">
+              <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0">
+                <div className="space-y-1">
+                  <Label className="text-sm md:text-base">Automatic Backup</Label>
+                  <p className="text-xs md:text-sm text-gray-500">Enable automatic data backups</p>
                 </div>
                 <Switch
                   checked={settings?.autoBackup || false}
@@ -330,17 +332,19 @@ export default function Settings() {
 
               <Separator />
 
-              <div className="space-y-4">
-                <Label className="text-base">Export Options</Label>
-                <div className="flex space-x-4">
+              <div className="space-y-3 md:space-y-4">
+                <Label className="text-sm md:text-base">Export Options</Label>
+                <div className="flex flex-col space-y-3 md:flex-row md:space-x-4 md:space-y-0">
                   <Button
                     onClick={() => exportDataMutation.mutate()}
                     disabled={exportDataMutation.isPending}
+                    size="sm"
+                    className="w-full md:w-auto"
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Export All Data
                   </Button>
-                  <Button variant="outline" disabled>
+                  <Button variant="outline" disabled size="sm" className="w-full md:w-auto">
                     <Upload className="h-4 w-4 mr-2" />
                     Import Data
                   </Button>
@@ -350,23 +354,25 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="system" className="space-y-6">
+        <TabsContent value="system" className="space-y-4 md:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>System Maintenance</CardTitle>
-              <CardDescription>System maintenance and cleanup tools</CardDescription>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg md:text-xl">System Maintenance</CardTitle>
+              <CardDescription className="text-sm">System maintenance and cleanup tools</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 md:space-y-6">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Clear Cache</Label>
-                    <p className="text-sm text-gray-500">Clear system cache to improve performance</p>
+                <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0">
+                  <div className="space-y-1">
+                    <Label className="text-sm md:text-base">Clear Cache</Label>
+                    <p className="text-xs md:text-sm text-gray-500">Clear system cache to improve performance</p>
                   </div>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => clearCacheMutation.mutate()}
                     disabled={clearCacheMutation.isPending}
+                    className="w-full md:w-auto"
                   >
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Clear Cache
@@ -375,12 +381,12 @@ export default function Settings() {
 
                 <Separator />
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base text-red-600">Danger Zone</Label>
-                    <p className="text-sm text-gray-500">Irreversible and destructive actions</p>
+                <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0">
+                  <div className="space-y-1">
+                    <Label className="text-sm md:text-base text-red-600">Danger Zone</Label>
+                    <p className="text-xs md:text-sm text-gray-500">Irreversible and destructive actions</p>
                   </div>
-                  <Button variant="destructive" disabled>
+                  <Button variant="destructive" disabled size="sm" className="w-full md:w-auto">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Reset All Data
                   </Button>

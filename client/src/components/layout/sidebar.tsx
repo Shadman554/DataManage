@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Book, Languages, Worm, Pill, Video, Users, 
   HelpCircle, Bell, User, BarChart3, Link, Settings, 
-  Download, Upload 
+  Download, Upload, Shield 
 } from 'lucide-react';
 import type { CollectionName } from '@shared/schema';
 
@@ -139,6 +139,16 @@ export function Sidebar({ activeCollection, onCollectionChange, currentView, onV
               <Button variant="ghost" className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" disabled>
                 <Upload className="mr-3 h-4 w-4" />
                 Import Data
+              </Button>
+            </li>
+            <li>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onClick={() => window.open('/admin', '_blank')}
+              >
+                <Shield className="mr-3 h-4 w-4" />
+                Admin Panel
               </Button>
             </li>
           </ul>

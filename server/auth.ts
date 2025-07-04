@@ -205,6 +205,46 @@ export class AuthService {
       .orderBy(activityLogs.timestamp)
       .limit(limit);
   }
+
+  // Update admin (super admin only)
+  static async updateAdmin(adminId: string, updateData: Partial<AdminUser>): Promise<AdminUser | null> {
+    const [updatedAdmin] = await db
+      .update(adminUsers)
+      .set({
+        ...updateData,
+        updatedAt: new Date(),
+      })
+      .where(eq(adminUsers.id, adminId))
+      .returning();
+    
+    return updatedAdmin as AdminUser || null;
+  }
+
+  // Delete admin (super admin only)
+  static async deleteAdmin(adminId: string): Promise<boolean> {
+    const result = await db
+      .delete(adminUsers)
+      .where(eq(adminUsers.id, adminId));
+    
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Toggle admin active status (super admin only)
+  static async toggleAdminStatus(adminId: string): Promise<AdminUser | null> {
+    const admin = await this.getAdminById(adminId);
+    if (!admin) return null;
+
+    const [updatedAdmin] = await db
+      .update(adminUsers)
+      .set({
+        isActive: !admin.isActive,
+        updatedAt: new Date(),
+      })
+      .where(eq(adminUsers.id, adminId))
+      .returning();
+    
+    return updatedAdmin as AdminUser || null;
+  }
 }
 
 // Middleware to authenticate admin

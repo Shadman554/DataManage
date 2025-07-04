@@ -57,12 +57,12 @@ export function AddEditModal({ isOpen, onClose, collection, item }: AddEditModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-4xl max-h-[95vh] mx-2 md:mx-auto overflow-y-auto">
+      <DialogContent className="w-full max-w-4xl max-h-[95vh] mx-2 md:mx-auto overflow-y-auto" aria-describedby="modal-description">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-lg md:text-xl">
             {isEditing ? `Edit ${displayName}` : `Add New ${displayName}`}
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600">
+          <DialogDescription id="modal-description" className="text-sm text-gray-600">
             {isEditing 
               ? `Modify the details of this ${displayName.toLowerCase()} item.`
               : `Fill out the form below to create a new ${displayName.toLowerCase()} item.`

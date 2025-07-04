@@ -1,6 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Download, Trash2 } from 'lucide-react';
+import { Plus, Download, Trash2, LogOut, User } from 'lucide-react';
+import { useAdmin, logoutAdmin } from '@/hooks/useAdmin';
+import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
 
 interface HeaderProps {
   collectionName: string;
@@ -10,6 +13,27 @@ interface HeaderProps {
 }
 
 export function Header({ collectionName, onAddNew, onBulkDelete, hasSelected }: HeaderProps) {
+  const { admin } = useAdmin();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+      queryClient.clear();
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully.",
+      });
+      window.location.href = '/';
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -24,6 +48,14 @@ export function Header({ collectionName, onAddNew, onBulkDelete, hasSelected }: 
         </div>
         
         <div className="flex items-center space-x-4">
+          {/* Admin Info */}
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <User className="h-4 w-4" />
+            <span>{admin?.username}</span>
+            <Badge variant={admin?.role === 'super_admin' ? 'default' : 'secondary'}>
+              {admin?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+            </Badge>
+          </div>
           {hasSelected && (
             <Button
               variant="destructive"
@@ -52,6 +84,16 @@ export function Header({ collectionName, onAddNew, onBulkDelete, hasSelected }: 
           >
             <Plus className="mr-2 h-4 w-4" />
             Add New
+          </Button>
+          
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            size="sm"
+            className="flex items-center"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
           </Button>
         </div>
       </div>

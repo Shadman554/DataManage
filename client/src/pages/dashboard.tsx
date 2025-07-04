@@ -9,6 +9,64 @@ import { SearchFilter } from '@/components/search-filter';
 import { collections } from '@/lib/collections';
 import Settings from '@/pages/settings';
 import type { CollectionName } from '@shared/schema';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { LogOut, User, MoreVertical } from 'lucide-react';
+import { useAdmin, logoutAdmin } from '@/hooks/useAdmin';
+import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
+
+function MobileProfileMenu() {
+  const { admin } = useAdmin();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+      queryClient.clear();
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully.",
+      });
+      window.location.href = '/';
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="p-2">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <div className="px-3 py-2">
+          <div className="flex items-center space-x-2">
+            <User className="h-4 w-4" />
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{admin?.username}</span>
+              <Badge variant={admin?.role === 'super_admin' ? 'default' : 'secondary'} className="w-fit text-xs">
+                {admin?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function Dashboard() {
   const [activeCollection, setActiveCollection] = useState<CollectionName>('books');
@@ -66,7 +124,7 @@ export default function Dashboard() {
           <h1 className="text-lg font-semibold text-primary truncate">
             {currentView === 'collections' ? collectionConfig.displayName : 'Settings'}
           </h1>
-          <div className="w-10" />
+          <MobileProfileMenu />
         </div>
 
         {currentView === 'settings' ? (
