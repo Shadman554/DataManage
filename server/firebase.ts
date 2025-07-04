@@ -1,0 +1,52 @@
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
+
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
+};
+
+// Function to format private key properly
+function formatPrivateKey(key: string | undefined): string | undefined {
+  if (!key) return undefined;
+  return key.replace(/\\n/g, '\n');
+}
+
+const serviceAccount = {
+  type: "service_account",
+  project_id: process.env.FIREBASE_PROJECT_ID,
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+  private_key: formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY),
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  client_id: process.env.FIREBASE_CLIENT_ID,
+  auth_uri: "https://accounts.google.com/o/oauth2/auth",
+  token_uri: "https://oauth2.googleapis.com/token",
+  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+  client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+};
+
+// Validate required fields
+if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
+  throw new Error('Missing required Firebase configuration. Please check your environment variables.');
+}
+
+// Initialize Firebase Admin SDK
+let app;
+if (getApps().length === 0) {
+  app = initializeApp({
+    credential: cert(serviceAccount as any),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  });
+} else {
+  app = getApps()[0];
+}
+
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+
+export default app;
