@@ -1,0 +1,63 @@
+[
+  {
+    "id": "5NU990SEzYAuxXFLMGyx",
+    "title": "New Notification",
+    "body": "This is a custom notification sent from the admin panel.",
+    "timestamp": {
+      "_seconds": 1725559867,
+      "_nanoseconds": 740000000
+    },
+    "_exportedAt": "2025-06-06T19:36:50.033Z"
+  },
+  {
+    "id": "Eml8K4SSlpDEDIyyd1DB",
+    "title": "test",
+    "body": "test",
+    "timestamp": {
+      "_seconds": 1725559867,
+      "_nanoseconds": 605000000
+    },
+    "_exportedAt": "2025-06-06T19:36:50.033Z"
+  },
+  {
+    "id": "G0FyKy4Y7JD38J0cKALy",
+    "title": "test",
+    "body": "test",
+    "timestamp": {
+      "_seconds": 1725559867,
+      "_nanoseconds": 476000000
+    },
+    "_exportedAt": "2025-06-06T19:36:50.033Z"
+  },
+  {
+    "id": "RsnBWXZmJS1w216eawmq",
+    "title": "test",
+    "body": "test",
+    "timestamp": {
+      "_seconds": 1725559867,
+      "_nanoseconds": 529000000
+    },
+    "_exportedAt": "2025-06-06T19:36:50.033Z"
+  },
+  {
+    "id": "ci6iy4nPwDsYIyJ5SZt3",
+    "title": "New Notification",
+    "body": "This is a custom notification sent from the admin panel.",
+    "timestamp": {
+      "_seconds": 1725559867,
+      "_nanoseconds": 670000000
+    },
+    "_exportedAt": "2025-06-06T19:36:50.033Z"
+  },
+  {
+    "id": "q3APdXIHdBD2JNBTpBJ0",
+    "imageUrl": "https://your-image-url.com/image.jpg",
+    "title": "New Admin Notification",
+    "body": "This is a custom notification sent from the admin panel with an image.",
+    "timestamp": {
+      "_seconds": 1725559867,
+      "_nanoseconds": 799000000
+    },
+    "_exportedAt": "2025-06-06T19:36:50.033Z"
+  }
+]

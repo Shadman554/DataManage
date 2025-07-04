@@ -1,0 +1,22 @@
+[
+  {
+    "id": "SwEJS1CkXTeDRcn42AdK",
+    "name": "Hematocrit (HCG)",
+    "unit": "%",
+    "minValue": "30",
+    "maxValue": "45",
+    "species": "Feline",
+    "category": "Hematology",
+    "_exportedAt": "2025-06-06T19:36:46.120Z"
+  },
+  {
+    "id": "l2gegRm1Ya8X4MyHarmp",
+    "name": "Hematocrit (HCG)",
+    "unit": "%",
+    "minValue": "35",
+    "maxValue": "57",
+    "species": "Canine",
+    "category": "Hematology",
+    "_exportedAt": "2025-06-06T19:36:46.120Z"
+  }
+]

@@ -52,12 +52,60 @@ The system manages 11 distinct data collections:
 ## Data Flow
 
 1. **Client Requests**: Frontend makes API calls through React Query
-2. **API Layer**: Express.js routes handle CRUD operations
-3. **Data Validation**: Zod schemas validate incoming data
-4. **Database Operations**: Drizzle ORM manages PostgreSQL interactions
-5. **File Operations**: Firebase Storage handles file uploads/downloads
-6. **Response**: JSON responses sent back to client
-7. **State Updates**: React Query updates client-side cache
+2. **Authentication**: Admin authentication middleware validates JWT tokens
+3. **Authorization**: Role-based access control (super admin vs admin)
+4. **API Layer**: Express.js routes handle CRUD operations
+5. **Activity Logging**: All admin actions are logged to PostgreSQL database
+6. **Data Validation**: Zod schemas validate incoming data
+7. **Database Operations**: Drizzle ORM manages PostgreSQL interactions
+8. **File Operations**: Firebase Storage handles file uploads/downloads
+9. **Response**: JSON responses sent back to client
+10. **State Updates**: React Query updates client-side cache
+
+## Admin Authentication System
+
+### Overview
+A comprehensive admin authentication and activity tracking system has been implemented with PostgreSQL database backend and JWT-based session management.
+
+### Features
+- **Role-Based Access Control**: Super Admin and Admin roles with different permissions
+- **Secure Authentication**: JWT tokens with HTTP-only cookies, bcrypt password hashing
+- **Activity Tracking**: Complete audit trail of all admin actions (create, update, delete)
+- **Admin Statistics**: Real-time statistics showing admin activity metrics
+- **Session Management**: Secure session handling with automatic cleanup
+
+### Database Tables
+- **admin_users**: Admin account information with roles and authentication data
+- **admin_sessions**: JWT session tracking with expiration and device information
+- **activity_logs**: Complete audit trail of admin actions with metadata
+
+### Access Routes
+- **Admin Panel**: Access via `/admin` route
+- **Super Admin Dashboard**: Full statistics and activity monitoring
+- **Admin Dashboard**: Limited access for regular admins
+- **Login System**: Secure authentication flow with proper error handling
+
+### Super Admin Credentials
+- **Username**: `superadmin`
+- **Password**: `SuperAdmin123!`
+- **Email**: `admin@vet-dict.com`
+- **Role**: `super_admin`
+
+### Activity Tracking
+All admin actions are automatically logged including:
+- **Action Type**: Create, Update, Delete operations
+- **Collection**: Which data collection was modified
+- **Document Details**: ID and title of affected items
+- **Admin Information**: Who performed the action
+- **Metadata**: Timestamp, IP address, user agent
+- **Data Changes**: Before/after snapshots for updates and deletions
+
+### Statistics Dashboard
+Super admins can view:
+- **Total Operations**: System-wide create/update/delete counts
+- **Admin Performance**: Individual admin activity breakdown
+- **Recent Activity**: Real-time activity feed with filtering
+- **Admin Management**: User account overview and management
 
 ## External Dependencies
 
@@ -119,6 +167,10 @@ The system currently uses a hybrid approach:
 
 ```
 Recent Changes:
+- July 04, 2025: Implemented comprehensive admin authentication system
+- July 04, 2025: Added PostgreSQL database with Drizzle ORM integration
+- July 04, 2025: Created super admin dashboard with activity tracking
+- July 04, 2025: Built admin activity logging and statistics monitoring
 - July 04, 2025: Fixed SelectItem component value prop errors
 - July 04, 2025: Implemented hybrid storage with Firebase fallback
 - July 04, 2025: Added comprehensive error handling and logging

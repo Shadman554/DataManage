@@ -41,6 +41,11 @@ export function DataTable({
   
   const config = getCollectionConfig(collection);
 
+  // Deduplicate data to handle duplicate IDs
+  const deduplicatedData = data ? data.filter((item, index, self) => 
+    index === self.findIndex(i => i.id === item.id)
+  ) : [];
+
   if (isLoading) {
     return (
       <Card>
@@ -67,7 +72,7 @@ export function DataTable({
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!deduplicatedData || deduplicatedData.length === 0) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -80,7 +85,7 @@ export function DataTable({
   }
 
   // Filter data based on search query
-  const filteredData = data.filter(item => {
+  const filteredData = deduplicatedData.filter(item => {
     if (!searchQuery) return true;
     
     const searchLower = searchQuery.toLowerCase();
@@ -213,7 +218,7 @@ export function DataTable({
             
             <TableBody>
               {paginatedData.map((item) => (
-                <TableRow key={item.id} className="hover:bg-gray-50">
+                <TableRow key={`${collection}-${item.id}`} className="hover:bg-gray-50">
                   <TableCell>
                     <Checkbox 
                       checked={selectedItems.includes(item.id)}
