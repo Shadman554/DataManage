@@ -103,18 +103,25 @@ app.use((req, res, next) => {
     const { storage } = await import('./storage');
     storage.enableFirebase();
     console.log('Firebase storage enabled');
-  } catch (error) {
-    console.error('Firebase connection failed, using fallback storage:', error.message);
+  } catch (error: any) {
+    console.error('Firebase connection failed, using fallback storage:', error?.message || error);
   }
 
   // Run production setup if needed
   if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
     try {
       console.log('🚀 Running production setup...');
-      const { setupProduction } = await import('../setup-production.js');
-      await setupProduction();
-    } catch (error) {
-      console.error('⚠️  Production setup warning:', error.message);
+      const { execSync } = await import('child_process');
+      
+      console.log('📊 Running database migrations...');
+      execSync('npm run db:push', { stdio: 'inherit' });
+      
+      console.log('👤 Creating super admin account...');
+      execSync('node create-super-admin.js', { stdio: 'inherit' });
+      
+      console.log('✅ Production setup completed successfully!');
+    } catch (error: any) {
+      console.error('⚠️  Production setup warning:', error?.message || error);
       console.log('Continuing with server startup...');
     }
   }
@@ -138,10 +145,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Use Railway's PORT environment variable in production, otherwise use 5000
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
   server.listen({
     port,
     host: "0.0.0.0",
