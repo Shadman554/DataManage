@@ -161,6 +161,51 @@ if (fs.existsSync(distPath)) {
   });
 }
 
+// Database setup function
+async function setupDatabase() {
+  try {
+    console.log('🗄️  Setting up Railway database...');
+    
+    // Import and run migrations
+    const { execSync } = await import('child_process');
+    
+    console.log('📊 Running database migrations...');
+    execSync('drizzle-kit push', { stdio: 'inherit' });
+    
+    // Import auth service and create super admin
+    console.log('👤 Setting up super admin...');
+    const { SecureAuthService } = await import('./auth.js');
+    
+    // Check if super admin already exists
+    try {
+      const existingAdmin = await SecureAuthService.getAdminByUsername('superadmin');
+      
+      if (existingAdmin) {
+        console.log('✅ Super admin already exists');
+      } else {
+        const superAdmin = await SecureAuthService.createAdmin({
+          username: 'superadmin',
+          email: 'admin@vet-dict.com',
+          password: 'SuperAdmin123!',
+          role: 'super_admin',
+          firstName: 'Super',
+          lastName: 'Admin',
+        });
+
+        console.log('✅ Super admin created:', superAdmin.username);
+      }
+    } catch (adminError) {
+      console.log('⚠️  Admin setup skipped:', adminError.message);
+    }
+    
+    console.log('🎉 Database setup completed!');
+    
+  } catch (error) {
+    console.error('⚠️  Database setup failed:', error.message);
+    console.log('📄 Continuing with server startup...');
+  }
+}
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
@@ -169,6 +214,11 @@ app.use((err, req, res, next) => {
 
 // Initialize authentication and start server
 async function startServer() {
+  // Set up database first in production
+  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+    await setupDatabase();
+  }
+  
   // Initialize authentication system
   await initializeAuth();
   
