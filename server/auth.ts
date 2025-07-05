@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { db } from './db';
 import { adminUsers, adminSessions, activityLogs } from '@shared/schema';
 import { eq, and, gt } from 'drizzle-orm';
@@ -17,21 +18,7 @@ const loginAttempts = new Map<string, { attempts: number; lastAttempt: Date; loc
 const activeSessions = new Map<string, { adminId: string; createdAt: Date; lastActivity: Date; ipAddress: string; userAgent: string }>();
 
 // Fallback storage for when database is unavailable
-const fallbackAdmins: AdminUser[] = [
-  {
-    id: 'super-admin-1',
-    username: 'superadmin',
-    email: 'admin@vet-dict.com',
-    password: '$2b$12$8K1p3z4m5n6o7p8q9r0s1t2u3v4w5x6y7z8a9b0c1d2e3f4g5h6i7j', // SuperAdmin123!
-    role: 'super_admin',
-    firstName: 'Super',
-    lastName: 'Admin',
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastLoginAt: undefined,
-  }
-];
+const fallbackAdmins: AdminUser[] = [];
 
 export interface AuthRequest extends Request {
   admin?: AdminUser;
@@ -103,14 +90,12 @@ export class SecureAuthService {
 
   // Generate cryptographically secure token
   static generateSecureToken(): string {
-    const crypto = require('crypto');
     return crypto.randomBytes(32).toString('hex');
   }
 
   // Generate ultra-secure JWT with session binding
   static generateToken(adminId: string, ipAddress: string, userAgent: string): string {
     const sessionId = this.generateSecureToken();
-    const crypto = require('crypto');
     
     const tokenPayload = {
       adminId,
@@ -140,7 +125,7 @@ export class SecureAuthService {
   // Verify token with session hijacking protection
   static verifyToken(token: string, ipAddress: string, userAgent: string): { adminId: string; sessionId: string } | null {
     try {
-      const crypto = require('crypto');
+
       const decoded = jwt.verify(token, JWT_SECRET, {
         issuer: 'vet-dict-admin',
         audience: 'vet-dict-admin-panel'
@@ -263,7 +248,7 @@ export class SecureAuthService {
           .update(adminUsers)
           .set({ lastLoginAt: new Date() })
           .where(eq(adminUsers.id, admin.id));
-      } else {
+      } else if (admin) {
         const fallbackAdmin = fallbackAdmins.find(a => a.id === admin.id);
         if (fallbackAdmin) {
           fallbackAdmin.lastLoginAt = new Date();
@@ -321,7 +306,7 @@ export class SecureAuthService {
     const now = Date.now();
     let cleanedCount = 0;
 
-    for (const [sessionId, session] of activeSessions.entries()) {
+    for (const [sessionId, session] of Array.from(activeSessions.entries())) {
       if (now - session.lastActivity.getTime() > SESSION_TIMEOUT) {
         activeSessions.delete(sessionId);
         cleanedCount++;
