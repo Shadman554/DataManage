@@ -26,7 +26,12 @@ if (!databaseUrl) {
     db = drizzle({ client: pool, schema });
   } else {
     // Use standard PostgreSQL connection for Railway/other providers
-    pool = new PgPool({ connectionString: databaseUrl });
+    pool = new PgPool({ 
+      connectionString: databaseUrl,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
     db = drizzlePg(pool, { schema });
   }
 }
