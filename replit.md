@@ -17,17 +17,17 @@ This is a full-stack web application built as an admin panel for managing a vete
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript with ES modules
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: MySQL with Drizzle ORM
 - **File Storage**: Firebase Storage for images and PDFs
-- **Authentication**: Firebase Admin SDK
+- **Authentication**: JWT-based admin authentication
 
 ## Key Components
 
 ### Database Layer
-- **ORM**: Drizzle ORM configured for PostgreSQL
+- **ORM**: Drizzle ORM configured for MySQL
 - **Schema Location**: `shared/schema.ts` - contains all type definitions and validation schemas
 - **Migration System**: Database migrations stored in `./migrations` directory
-- **Provider**: Neon Database (PostgreSQL-compatible serverless database)
+- **Provider**: Railway MySQL Database
 
 ### Data Collections
 The system manages 11 distinct data collections:
@@ -110,7 +110,7 @@ Super admins can view:
 ## External Dependencies
 
 ### Core Dependencies
-- **@neondatabase/serverless**: PostgreSQL database connection
+- **mysql2**: MySQL database connection
 - **drizzle-orm**: Type-safe database ORM
 - **firebase-admin**: Server-side Firebase integration
 - **@tanstack/react-query**: Server state management
@@ -166,6 +166,11 @@ The application is designed to be deployed on platforms that support Node.js wit
 
 ```
 Recent Changes:
+- July 05, 2025: MIGRATION: Successfully migrated from Replit Agent to standard Replit environment
+- July 05, 2025: DATABASE: Migrated from PostgreSQL to MySQL for Railway deployment compatibility
+- July 05, 2025: CLEANUP: Removed unused Railway setup files and PostgreSQL dependencies
+- July 05, 2025: SCHEMA: Updated Drizzle schema to use MySQL tables instead of PostgreSQL
+- July 05, 2025: SETUP: Created railway-setup.js for MySQL database initialization
 - July 05, 2025: RAILWAY: Fixed PostgreSQL SSL certificate chain issues with enhanced SSL configuration
 - July 05, 2025: RAILWAY: Updated database setup endpoint with direct PostgreSQL connection bypassing SSL verification
 - July 05, 2025: RAILWAY: Added checkServerIdentity bypass to resolve self-signed certificate errors

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { pgTable, text, varchar, timestamp, boolean, integer, uuid } from 'drizzle-orm/pg-core';
+import { mysqlTable, text, varchar, timestamp, boolean, int, varchar as mysqlVarchar } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
 
 // Base timestamp schema
@@ -201,8 +201,8 @@ export type CollectionData = {
 // ===== ADMIN AUTHENTICATION SYSTEM =====
 
 // Admin Users Table
-export const adminUsers = pgTable('admin_users', {
-  id: uuid('id').primaryKey().defaultRandom(),
+export const adminUsers = mysqlTable('admin_users', {
+  id: varchar('id', { length: 255 }).primaryKey(),
   username: varchar('username', { length: 50 }).unique().notNull(),
   email: varchar('email', { length: 255 }).unique().notNull(),
   password: varchar('password', { length: 255 }).notNull(),
@@ -210,33 +210,33 @@ export const adminUsers = pgTable('admin_users', {
   firstName: varchar('first_name', { length: 100 }),
   lastName: varchar('last_name', { length: 100 }),
   isActive: boolean('is_active').default(true),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  createdAt: timestamp('created_at'),
+  updatedAt: timestamp('updated_at'),
   lastLoginAt: timestamp('last_login_at'),
 });
 
 // Activity Logs Table
-export const activityLogs = pgTable('activity_logs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  adminId: uuid('admin_id').references(() => adminUsers.id).notNull(),
+export const activityLogs = mysqlTable('activity_logs', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  adminId: varchar('admin_id', { length: 255 }).references(() => adminUsers.id).notNull(),
   action: varchar('action', { length: 50 }).notNull(), // 'create', 'update', 'delete'
   collection: varchar('collection', { length: 50 }).notNull(),
   documentId: varchar('document_id', { length: 255 }).notNull(),
   documentTitle: varchar('document_title', { length: 500 }),
   oldData: text('old_data'), // JSON string of previous data (for updates/deletes)
   newData: text('new_data'), // JSON string of new data (for creates/updates)
-  timestamp: timestamp('timestamp').defaultNow(),
+  timestamp: timestamp('timestamp'),
   ipAddress: varchar('ip_address', { length: 45 }),
   userAgent: text('user_agent'),
 });
 
 // Admin Sessions Table
-export const adminSessions = pgTable('admin_sessions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  adminId: uuid('admin_id').references(() => adminUsers.id).notNull(),
+export const adminSessions = mysqlTable('admin_sessions', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  adminId: varchar('admin_id', { length: 255 }).references(() => adminUsers.id).notNull(),
   sessionToken: varchar('session_token', { length: 255 }).unique().notNull(),
   expiresAt: timestamp('expires_at').notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: timestamp('created_at'),
   ipAddress: varchar('ip_address', { length: 45 }),
   userAgent: text('user_agent'),
 });
