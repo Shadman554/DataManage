@@ -166,38 +166,117 @@ async function setupDatabase() {
   try {
     console.log('🗄️  Setting up Railway database...');
     
-    // Import and run migrations
-    const { execSync } = await import('child_process');
+    // Direct database connection for setup
+    const { Client } = await import('pg');
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+    });
     
-    console.log('📊 Running database migrations...');
-    execSync('drizzle-kit push', { stdio: 'inherit' });
+    await client.connect();
+    console.log('📊 Connected to database for setup');
     
-    // Import auth service and create super admin
-    console.log('👤 Setting up super admin...');
-    const { SecureAuthService } = await import('./auth.js');
+    // Create admin_users table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "admin_users" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+        "username" varchar(50) NOT NULL,
+        "email" varchar(255) NOT NULL,
+        "password_hash" varchar(255) NOT NULL,
+        "role" varchar(20) DEFAULT 'admin' NOT NULL,
+        "first_name" varchar(100),
+        "last_name" varchar(100),
+        "is_active" boolean DEFAULT true NOT NULL,
+        "last_login" timestamp,
+        "created_at" timestamp DEFAULT now() NOT NULL,
+        "updated_at" timestamp DEFAULT now() NOT NULL,
+        CONSTRAINT "admin_users_username_unique" UNIQUE("username"),
+        CONSTRAINT "admin_users_email_unique" UNIQUE("email")
+      );
+    `);
     
-    // Check if super admin already exists
+    // Create admin_sessions table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "admin_sessions" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+        "admin_id" uuid NOT NULL,
+        "token_hash" varchar(255) NOT NULL,
+        "ip_address" varchar(45),
+        "user_agent" text,
+        "expires_at" timestamp NOT NULL,
+        "created_at" timestamp DEFAULT now() NOT NULL,
+        "last_activity" timestamp DEFAULT now() NOT NULL
+      );
+    `);
+    
+    // Create activity_logs table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "activity_logs" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+        "admin_id" uuid NOT NULL,
+        "action" varchar(20) NOT NULL,
+        "collection" varchar(50) NOT NULL,
+        "document_id" varchar(255),
+        "document_title" varchar(255),
+        "ip_address" varchar(45),
+        "user_agent" text,
+        "metadata" jsonb,
+        "created_at" timestamp DEFAULT now() NOT NULL
+      );
+    `);
+    
+    // Add foreign key constraints
     try {
-      const existingAdmin = await SecureAuthService.getAdminByUsername('superadmin');
-      
-      if (existingAdmin) {
-        console.log('✅ Super admin already exists');
-      } else {
-        const superAdmin = await SecureAuthService.createAdmin({
-          username: 'superadmin',
-          email: 'admin@vet-dict.com',
-          password: 'SuperAdmin123!',
-          role: 'super_admin',
-          firstName: 'Super',
-          lastName: 'Admin',
-        });
-
-        console.log('✅ Super admin created:', superAdmin.username);
-      }
-    } catch (adminError) {
-      console.log('⚠️  Admin setup skipped:', adminError.message);
+      await client.query(`
+        ALTER TABLE "admin_sessions" 
+        ADD CONSTRAINT "admin_sessions_admin_id_admin_users_id_fk" 
+        FOREIGN KEY ("admin_id") REFERENCES "admin_users"("id") 
+        ON DELETE cascade ON UPDATE no action;
+      `);
+    } catch (e) {
+      // Constraint might already exist
     }
     
+    try {
+      await client.query(`
+        ALTER TABLE "activity_logs" 
+        ADD CONSTRAINT "activity_logs_admin_id_admin_users_id_fk" 
+        FOREIGN KEY ("admin_id") REFERENCES "admin_users"("id") 
+        ON DELETE cascade ON UPDATE no action;
+      `);
+    } catch (e) {
+      // Constraint might already exist
+    }
+    
+    console.log('✅ Database tables created');
+    
+    // Create super admin user with bcrypt hash
+    const bcrypt = await import('bcrypt');
+    const passwordHash = await bcrypt.hash('SuperAdmin123!', 12);
+    
+    const result = await client.query(`
+      INSERT INTO "admin_users" (
+        "username", "email", "password_hash", "role", 
+        "first_name", "last_name", "is_active"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (username) DO NOTHING
+      RETURNING username;
+    `, [
+      'superadmin',
+      'admin@vet-dict.com', 
+      passwordHash,
+      'super_admin',
+      'Super',
+      'Admin',
+      true
+    ]);
+    
+    if (result.rows.length > 0) {
+      console.log('✅ Super admin created: superadmin');
+    } else {
+      console.log('✅ Super admin already exists');
+    }
+    
+    await client.end();
     console.log('🎉 Database setup completed!');
     
   } catch (error) {
