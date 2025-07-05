@@ -1,7 +1,7 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "vite build && esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --outfile=dist/index.js"
+    "buildCommand": "vite build && esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js"
   },
   "deploy": {
     "startCommand": "npm run start",
