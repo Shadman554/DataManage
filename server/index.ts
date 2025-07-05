@@ -107,6 +107,18 @@ app.use((req, res, next) => {
     console.error('Firebase connection failed, using fallback storage:', error.message);
   }
 
+  // Run production setup if needed
+  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+    try {
+      console.log('🚀 Running production setup...');
+      const { setupProduction } = await import('../setup-production.js');
+      await setupProduction();
+    } catch (error) {
+      console.error('⚠️  Production setup warning:', error.message);
+      console.log('Continuing with server startup...');
+    }
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
