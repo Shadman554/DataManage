@@ -51,7 +51,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         token,
       });
     } catch (error) {
-      res.status(400).json({ error: "Invalid request data" });
+      console.error("Login error:", error);
+      res.status(400).json({ 
+        error: "Invalid request data", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
 
@@ -101,7 +105,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
     } catch (error) {
-      res.status(400).json({ error: "Failed to create admin" });
+      console.error("Admin creation error:", error);
+      res.status(400).json({ 
+        error: "Failed to create admin",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Download, Trash2, LogOut, User } from 'lucide-react';
+import { Plus, Download, Trash2, LogOut, User, Shield } from 'lucide-react';
 import { useAdmin, logoutAdmin } from '@/hooks/useAdmin';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
@@ -32,6 +32,10 @@ export function Header({ collectionName, onAddNew, onBulkDelete, hasSelected }: 
         variant: "destructive",
       });
     }
+  };
+
+  const handleGoToAdminPanel = () => {
+    window.location.href = '/admin';
   };
 
   return (
@@ -84,6 +88,16 @@ export function Header({ collectionName, onAddNew, onBulkDelete, hasSelected }: 
           >
             <Plus className="mr-2 h-4 w-4" />
             Add New
+          </Button>
+          
+          <Button
+            onClick={handleGoToAdminPanel}
+            variant="outline"
+            size="sm"
+            className="flex items-center"
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            Admin Panel
           </Button>
           
           <Button

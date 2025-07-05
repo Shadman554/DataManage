@@ -9,6 +9,26 @@ import type { Request, Response, NextFunction } from 'express';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 const SALT_ROUNDS = 10;
 
+// Fallback in-memory admin storage when database is not available
+const fallbackAdmins: AdminUser[] = [
+  {
+    id: 'super-admin-1',
+    username: 'superadmin',
+    email: 'admin@vet-dict.com',
+    password: '$2b$10$H84L4YraQzHr.tUKQHDSXusZq7Sw1yVFl4IeTFGuVv.zRrX5G.3Ha', // SuperAdmin123!
+    role: 'super_admin',
+    firstName: 'Super',
+    lastName: 'Admin',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastLoginAt: undefined,
+  }
+];
+
+const fallbackSessions: string[] = [];
+const fallbackActivityLogs: any[] = [];
+
 export interface AuthRequest extends Request {
   admin?: AdminUser;
 }
@@ -47,36 +67,73 @@ export class AuthService {
   static async createAdmin(userData: InsertAdminUser): Promise<AdminUser> {
     const hashedPassword = await this.hashPassword(userData.password);
     
-    const [admin] = await db
-      .insert(adminUsers)
-      .values({
-        ...userData,
+    if (!db) {
+      // Use fallback storage
+      const newAdmin: AdminUser = {
+        id: `admin-${Date.now()}`,
+        username: userData.username,
+        email: userData.email,
         password: hashedPassword,
-      })
-      .returning();
+        role: userData.role,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastLoginAt: undefined,
+      };
+      
+      fallbackAdmins.push(newAdmin);
+      return newAdmin;
+    } else {
+      const [admin] = await db
+        .insert(adminUsers)
+        .values({
+          ...userData,
+          password: hashedPassword,
+        })
+        .returning();
 
-    return admin as AdminUser;
+      return admin as AdminUser;
+    }
   }
 
   // Login admin
   static async login(username: string, password: string, req: Request): Promise<{ admin: AdminUser; token: string } | null> {
-    const [admin] = await db
-      .select()
-      .from(adminUsers)
-      .where(and(
-        eq(adminUsers.username, username),
-        eq(adminUsers.isActive, true)
-      ));
+    let admin: AdminUser | null = null;
+    
+    // Use fallback storage if database is not available
+    if (!db) {
+      console.log("Using fallback admin storage");
+      admin = fallbackAdmins.find(a => a.username === username && a.isActive) || null;
+    } else {
+      const [dbAdmin] = await db
+        .select()
+        .from(adminUsers)
+        .where(and(
+          eq(adminUsers.username, username),
+          eq(adminUsers.isActive, true)
+        ));
+      admin = dbAdmin || null;
+    }
 
     if (!admin || !(await this.verifyPassword(password, admin.password))) {
       return null;
     }
 
     // Update last login
-    await db
-      .update(adminUsers)
-      .set({ lastLoginAt: new Date() })
-      .where(eq(adminUsers.id, admin.id));
+    if (db) {
+      await db
+        .update(adminUsers)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(adminUsers.id, admin.id));
+    } else {
+      // Update in fallback storage
+      const fallbackAdmin = fallbackAdmins.find(a => a.id === admin.id);
+      if (fallbackAdmin) {
+        fallbackAdmin.lastLoginAt = new Date();
+      }
+    }
 
     // Generate token
     const token = this.generateToken(admin.id);
@@ -85,21 +142,30 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
 
-    await db
-      .insert(adminSessions)
-      .values({
-        adminId: admin.id,
-        sessionToken: token,
-        expiresAt,
-        ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
-        userAgent: req.get('User-Agent') || 'unknown',
-      });
+    if (db) {
+      await db
+        .insert(adminSessions)
+        .values({
+          adminId: admin.id,
+          sessionToken: token,
+          expiresAt,
+          ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent') || 'unknown',
+        });
+    } else {
+      // Store in fallback
+      fallbackSessions.push(token);
+    }
 
     return { admin: admin as AdminUser, token };
   }
 
   // Get admin by ID
   static async getAdminById(adminId: string): Promise<AdminUser | null> {
+    if (!db) {
+      return fallbackAdmins.find(a => a.id === adminId && a.isActive) || null;
+    }
+    
     const [admin] = await db
       .select()
       .from(adminUsers)
@@ -126,6 +192,15 @@ export class AuthService {
 
   // Logout admin
   static async logout(token: string): Promise<void> {
+    if (!db) {
+      // Remove from fallback sessions
+      const index = fallbackSessions.indexOf(token);
+      if (index > -1) {
+        fallbackSessions.splice(index, 1);
+      }
+      return;
+    }
+    
     await db
       .delete(adminSessions)
       .where(eq(adminSessions.sessionToken, token));
@@ -133,6 +208,13 @@ export class AuthService {
 
   // Clean expired sessions
   static async cleanExpiredSessions(): Promise<void> {
+    if (!db) {
+      // Clean expired tokens from fallback storage
+      const now = Date.now();
+      fallbackSessions.splice(0, fallbackSessions.length, ...fallbackSessions.filter(() => false)); // Clear all for simplicity
+      return;
+    }
+    
     await db
       .delete(adminSessions)
       .where(gt(adminSessions.expiresAt, new Date()));
@@ -140,6 +222,16 @@ export class AuthService {
 
   // Log activity
   static async logActivity(activityData: InsertActivityLog): Promise<void> {
+    if (!db) {
+      // Store in fallback activity logs
+      fallbackActivityLogs.push({
+        ...activityData,
+        id: `activity-${Date.now()}`,
+        timestamp: new Date(),
+      });
+      return;
+    }
+    
     await db
       .insert(activityLogs)
       .values(activityData);
@@ -147,6 +239,10 @@ export class AuthService {
 
   // Get all admins (super admin only)
   static async getAllAdmins(): Promise<AdminUser[]> {
+    if (!db) {
+      return fallbackAdmins.filter(admin => admin.isActive);
+    }
+    
     const admins = await db
       .select()
       .from(adminUsers)
@@ -157,6 +253,11 @@ export class AuthService {
 
   // Get admin statistics
   static async getAdminStats(adminId?: string) {
+    if (!db) {
+      // Return empty stats for fallback storage
+      return {};
+    }
+    
     const whereClause = adminId ? eq(activityLogs.adminId, adminId) : undefined;
     
     const stats = await db
@@ -184,6 +285,11 @@ export class AuthService {
 
   // Get activity logs with admin details
   static async getActivityLogs(limit: number = 100, adminId?: string) {
+    if (!db) {
+      // Return empty activity logs for fallback storage
+      return [];
+    }
+    
     const whereClause = adminId ? eq(activityLogs.adminId, adminId) : undefined;
     
     return db
