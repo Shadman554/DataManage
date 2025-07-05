@@ -112,13 +112,6 @@ app.use((req, res, next) => {
     console.error('Firebase connection failed, using fallback storage:', error?.message || error);
   }
 
-<<<<<<< HEAD
-  // Run production setup if needed (simplified for Railway)
-  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
-    console.log('🚀 Production environment detected');
-    console.log('📊 Database URL configured:', process.env.DATABASE_URL ? 'Yes' : 'No');
-    console.log('✅ App starting in production mode...');
-=======
   // Run production setup if needed
   if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
     try {
@@ -136,7 +129,6 @@ app.use((req, res, next) => {
       console.error('⚠️  Production setup warning:', error?.message || error);
       console.log('Continuing with server startup...');
     }
->>>>>>> 2f70103e50973b00246c7ba7acc0b67a36e58760
   }
 
   const server = await registerRoutes(app);
