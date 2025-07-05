@@ -44,12 +44,55 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working', timestamp: new Date().toISOString() });
 });
 
-// Import the actual authentication system
+// Simple authentication system for production
 async function initializeAuth() {
   try {
-    // Import the authentication module
-    const authModule = await import('./auth.js');
-    const { SecureAuthService } = authModule;
+    // Import required modules
+    const bcrypt = await import('bcrypt');
+    const jwt = await import('jsonwebtoken');
+    const { Client } = await import('pg');
+    
+    const JWT_SECRET = process.env.JWT_SECRET || 'VetDict2025SecureJWTKeyForProductionUseChangeThisToSomethingLongAndRandomForSecurity';
+    
+    // Simple auth service
+    const AuthService = {
+      async validateUser(username, password) {
+        const client = new Client({
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false }
+        });
+        
+        await client.connect();
+        
+        const result = await client.query(
+          'SELECT * FROM admin_users WHERE username = $1 AND is_active = true',
+          [username]
+        );
+        
+        await client.end();
+        
+        if (result.rows.length === 0) {
+          return null;
+        }
+        
+        const user = result.rows[0];
+        const isValid = await bcrypt.compare(password, user.password_hash);
+        
+        return isValid ? user : null;
+      },
+      
+      generateToken(userId) {
+        return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '24h' });
+      },
+      
+      verifyToken(token) {
+        try {
+          return jwt.verify(token, JWT_SECRET);
+        } catch {
+          return null;
+        }
+      }
+    };
     
     // Real authentication endpoint
     app.post('/api/admin/login', async (req, res) => {
@@ -60,16 +103,13 @@ async function initializeAuth() {
           return res.status(400).json({ error: 'Username and password required' });
         }
         
-        const result = await SecureAuthService.login(username, password, req);
+        const admin = await AuthService.validateUser(username, password);
         
-        if ('error' in result) {
-          return res.status(401).json({ 
-            error: result.error,
-            remainingTime: result.remainingTime 
-          });
+        if (!admin) {
+          return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const { admin, token } = result;
+        const token = AuthService.generateToken(admin.id);
         
         // Set HTTP-only cookie
         res.cookie("adminToken", token, {
@@ -79,7 +119,9 @@ async function initializeAuth() {
           maxAge: 24 * 60 * 60 * 1000,
         });
 
-        res.json({ admin });
+        // Remove password hash from response
+        const { password_hash, ...adminData } = admin;
+        res.json({ admin: adminData });
         
       } catch (error) {
         console.error('Login error:', error);
@@ -96,22 +138,33 @@ async function initializeAuth() {
           return res.status(401).json({ error: 'No token provided' });
         }
         
-        const ipAddress = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
-        const userAgent = req.get('User-Agent') || '';
+        const decoded = AuthService.verifyToken(token);
         
-        const session = SecureAuthService.verifyToken(token, ipAddress, userAgent);
-        
-        if (!session) {
+        if (!decoded) {
           return res.status(401).json({ error: 'Invalid or expired session' });
         }
         
-        const admin = await SecureAuthService.getAdminById(session.adminId);
+        // Get admin from database
+        const { Client } = await import('pg');
+        const client = new Client({
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false }
+        });
         
-        if (!admin) {
+        await client.connect();
+        
+        const result = await client.query(
+          'SELECT id, username, email, role, first_name, last_name, is_active, created_at FROM admin_users WHERE id = $1',
+          [decoded.userId]
+        );
+        
+        await client.end();
+        
+        if (result.rows.length === 0) {
           return res.status(401).json({ error: 'Admin not found' });
         }
         
-        res.json({ admin });
+        res.json({ admin: result.rows[0] });
         
       } catch (error) {
         console.error('Profile error:', error);
@@ -170,6 +223,9 @@ async function setupDatabase() {
     const { Client } = await import('pg');
     const client = new Client({
       connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
     });
     
     await client.connect();
