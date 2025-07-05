@@ -1,8 +1,8 @@
-import { AuthService } from './server/auth.js';
+import { SecureAuthService } from './server/auth.js';
 
 async function createSuperAdmin() {
   try {
-    const superAdmin = await AuthService.createAdmin({
+    const superAdmin = await SecureAuthService.createAdmin({
       username: 'superadmin',
       email: 'admin@vet-dict.com',
       password: 'SuperAdmin123!',
