@@ -91,9 +91,9 @@ export function AppLinkForm({ item, onSuccess }: AppLinkFormProps) {
           )}
         />
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium text-sm text-gray-700 mb-2">URL Examples:</h4>
-          <ul className="text-sm text-gray-600 space-y-1">
+        <div className="bg-muted p-4 rounded-lg">
+          <h4 className="font-medium text-sm text-foreground mb-2">URL Examples:</h4>
+          <ul className="text-sm text-muted-foreground space-y-1">
             <li>• Android: https://play.google.com/store/apps/details?id=com.yourapp</li>
             <li>• iOS: https://apps.apple.com/us/app/your-app/id123456789</li>
             <li>• Direct APK: https://your-domain.com/app.apk</li>

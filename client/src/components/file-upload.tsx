@@ -107,17 +107,17 @@ export function FileUpload({
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
           isDragActive 
             ? 'border-primary bg-primary/10' 
-            : 'border-gray-300 hover:border-primary'
+            : 'border-border hover:border-primary'
         }`}
       >
         <input {...getInputProps()} />
         
         <div className="flex flex-col items-center space-y-2">
-          <div className="text-gray-400">
+          <div className="text-muted-foreground">
             {getIcon()}
           </div>
           
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {getAcceptText()}
           </p>
           
@@ -130,7 +130,7 @@ export function FileUpload({
             {isPending ? 'Uploading...' : 'Choose File'}
           </Button>
           
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Max size: {Math.round(maxSize / 1024 / 1024)}MB
           </p>
         </div>
@@ -139,7 +139,7 @@ export function FileUpload({
       {isPending && (
         <div className="mt-4">
           <Progress value={uploadProgress} className="w-full" />
-          <p className="text-sm text-gray-500 mt-1">Uploading...</p>
+          <p className="text-sm text-muted-foreground mt-1">Uploading...</p>
         </div>
       )}
     </div>

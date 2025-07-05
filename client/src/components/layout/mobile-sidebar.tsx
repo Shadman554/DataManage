@@ -60,17 +60,17 @@ export function MobileSidebar({ activeCollection, onCollectionChange, currentVie
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0 flex flex-col">
+      <SheetContent side="left" className="w-64 p-0 flex flex-col bg-card dark:bg-sidebar-background border-r border-border dark:border-sidebar-border theme-transition">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SheetDescription className="sr-only">Access collections and system settings</SheetDescription>
-        <div className="p-4 border-b border-border">
-          <h1 className="text-lg font-bold text-primary">Vet Dictionary</h1>
-          <p className="text-sm text-muted-foreground">Admin Panel</p>
+        <div className="p-4 border-b border-border dark:border-sidebar-border">
+          <h1 className="text-lg font-bold text-primary dark:text-sidebar-primary">Vet Dictionary</h1>
+          <p className="text-sm text-muted-foreground dark:text-sidebar-foreground/70">Admin Panel</p>
         </div>
         
         <ScrollArea className="flex-1 h-0">
           <nav className="mt-4 pb-4">
-            <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="px-4 py-2 text-xs font-semibold text-muted-foreground dark:text-sidebar-foreground/70 uppercase tracking-wider">
               Collections
             </div>
             
@@ -85,10 +85,10 @@ export function MobileSidebar({ activeCollection, onCollectionChange, currentVie
                   <li key={collection}>
                     <Button
                       variant={isActive ? "secondary" : "ghost"}
-                      className={`w-full justify-start px-3 py-2 text-sm font-medium ${
+                      className={`w-full justify-start px-3 py-2 text-sm font-medium theme-transition ${
                         isActive 
-                          ? 'text-primary bg-accent' 
-                          : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                          ? 'text-primary dark:text-sidebar-primary bg-accent dark:bg-sidebar-accent' 
+                          : 'text-foreground dark:text-sidebar-foreground hover:bg-accent dark:hover:bg-sidebar-accent hover:text-accent-foreground dark:hover:text-sidebar-accent-foreground'
                       }`}
                       onClick={() => handleItemClick(() => {
                         onCollectionChange(collection);
@@ -165,7 +165,7 @@ export function MobileSidebar({ activeCollection, onCollectionChange, currentVie
               </li>
               <li>
                 <div className="w-full px-3 py-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Theme</span>
+                  <span className="text-sm font-medium text-foreground">Theme</span>
                   <ThemeToggle />
                 </div>
               </li>

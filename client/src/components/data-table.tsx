@@ -76,7 +76,7 @@ export function DataTable({
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-muted-foreground">
             No data available for {config.displayName}
           </div>
         </CardContent>
@@ -174,7 +174,7 @@ export function DataTable({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg md:text-xl">{config.displayName}</CardTitle>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">{filteredData.length} items</span>
+            <span className="text-sm text-muted-foreground">{filteredData.length} items</span>
             {/* View mode toggle for desktop only */}
             <div className="hidden md:flex items-center space-x-1">
               <Button
@@ -200,7 +200,7 @@ export function DataTable({
         {/* Mobile Card View */}
         <div className="md:hidden space-y-3">
           {paginatedData.map((item) => (
-            <Card key={item.id} className="border border-gray-200">
+            <Card key={item.id} className="border border-border">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-2">
@@ -235,10 +235,10 @@ export function DataTable({
                 <div className="space-y-2">
                   {displayFields.map((field) => (
                     <div key={field} className="flex flex-col">
-                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         {field.charAt(0).toUpperCase() + field.slice(1)}
                       </span>
-                      <span className="text-sm text-gray-900 break-words">
+                      <span className="text-sm text-foreground break-words">
                         {formatValue((item as any)[field], field)}
                       </span>
                     </div>
@@ -272,7 +272,7 @@ export function DataTable({
             
             <TableBody>
               {paginatedData.map((item) => (
-                <TableRow key={`${collection}-${item.id}`} className="hover:bg-gray-50">
+                <TableRow key={`${collection}-${item.id}`} className="hover:bg-muted">
                   <TableCell>
                     <Checkbox 
                       checked={selectedItems.includes(item.id)}
@@ -290,8 +290,8 @@ export function DataTable({
                             className="h-10 w-10 rounded object-cover"
                           />
                         ) : (
-                          <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
-                            <span className="text-xs text-gray-500">No image</span>
+                          <div className="h-10 w-10 bg-muted rounded flex items-center justify-center">
+                            <span className="text-xs text-muted-foreground">No image</span>
                           </div>
                         )
                       ) : (
@@ -321,13 +321,6 @@ export function DataTable({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
                         onClick={() => onDelete(item)}
                         className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                       >
@@ -346,7 +339,7 @@ export function DataTable({
           {/* Mobile Pagination */}
           <div className="md:hidden flex flex-col space-y-3">
             <div className="text-center">
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 Page {currentPage} of {totalPages} ({filteredData.length} total)
               </span>
             </div>
@@ -371,37 +364,37 @@ export function DataTable({
               </Button>
             </div>
             <div className="flex justify-center items-center space-x-2">
-              <span className="text-sm text-gray-500">Show:</span>
+              <span className="text-sm text-muted-foreground">Show:</span>
               <select 
                 value={itemsPerPage} 
                 onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                className="px-2 py-1 border border-gray-300 rounded text-sm"
+                className="px-2 py-1 border border-border rounded text-sm bg-background text-foreground dark:bg-card dark:text-foreground"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
                 <option value={25}>25</option>
               </select>
-              <span className="text-sm text-gray-500">per page</span>
+              <span className="text-sm text-muted-foreground">per page</span>
             </div>
           </div>
 
           {/* Desktop Pagination */}
           <div className="hidden md:flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} entries
               </span>
               <select 
                 value={itemsPerPage} 
                 onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded text-sm"
+                className="px-3 py-1 border border-border rounded text-sm bg-background text-foreground dark:bg-card dark:text-foreground"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
               </select>
-              <span className="text-sm text-gray-500">per page</span>
+              <span className="text-sm text-muted-foreground">per page</span>
             </div>
             
             <div className="flex items-center space-x-2">

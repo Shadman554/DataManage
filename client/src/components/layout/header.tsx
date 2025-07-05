@@ -40,14 +40,14 @@ export function Header({ collectionName, onAddNew, onBulkDelete, hasSelected }: 
   };
 
   return (
-    <header className="bg-card shadow-sm border-b border-border px-3 sm:px-6 py-3 sm:py-4">
+    <header className="bg-card dark:bg-card/95 shadow-sm dark:shadow-black/20 border-b border-border dark:border-border/50 px-3 sm:px-6 py-3 sm:py-4 theme-transition">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-          <h2 className="text-lg sm:text-2xl font-bold text-foreground">
+          <h2 className="text-lg sm:text-2xl font-bold text-foreground dark:text-foreground">
             {collectionName} Management
           </h2>
           <div className="flex items-center space-x-2 mt-1 sm:mt-0">
-            <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+            <div className="h-2 w-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
             <span className="text-xs sm:text-sm text-muted-foreground">Firebase Connected</span>
           </div>
         </div>
@@ -90,7 +90,7 @@ export function Header({ collectionName, onAddNew, onBulkDelete, hasSelected }: 
             <Button
               onClick={onAddNew}
               size="sm"
-              className="flex items-center text-xs px-2 py-1"
+              className="flex items-center text-xs px-2 py-1 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Plus className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Add New</span>
