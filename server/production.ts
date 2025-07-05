@@ -130,7 +130,7 @@ app.set('trust proxy', 1);
   }
 
   // Serve static files in production BEFORE registering API routes
-  const distPath = path.join(currentDir, "public");
+  const distPath = path.join(currentDir, "dist", "public");
   console.log('📁 Serving static files from:', distPath);
   console.log('📁 Current directory:', currentDir);
   console.log('📁 Directory exists:', fs.existsSync(currentDir));
