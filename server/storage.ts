@@ -1,4 +1,4 @@
-import { FallbackStorage } from './storage-fallback';
+// Using Firebase-only storage, removed fallback storage import
 import type { 
   Book, Word, Disease, Drug, TutorialVideo, Staff, Question, 
   Notification, User, NormalRange, AppLink,
@@ -253,95 +253,37 @@ export class FirebaseStorage implements IStorage {
   }
 }
 
-// Create a hybrid storage that uses Firebase with fallback to JSON data
-class HybridStorage implements IStorage {
+// Firebase-only storage (no fallback)
+class FirebaseOnlyStorage implements IStorage {
   private firebaseStorage: FirebaseStorage;
-  private fallbackStorage: FallbackStorage;
-  private useFirebase: boolean = false; // Temporarily disabled until connection is fixed
 
   constructor() {
     this.firebaseStorage = new FirebaseStorage();
-    this.fallbackStorage = new FallbackStorage();
-  }
-
-  // Method to enable Firebase (call this when credentials are working)
-  enableFirebase() {
-    console.log('Enabling Firebase storage...');
-    this.useFirebase = true;
-  }
-
-  // Method to disable Firebase (fallback to JSON)
-  disableFirebase() {
-    console.log('Disabling Firebase storage, using fallback...');
-    this.useFirebase = false;
-  }
-
-  // Check current storage mode
-  getStorageMode() {
-    return this.useFirebase ? 'firebase' : 'fallback';
-  }
-
-  private async executeWithFallback<T>(
-    firebaseOperation: () => Promise<T>,
-    fallbackOperation: () => Promise<T>
-  ): Promise<T> {
-    if (!this.useFirebase) {
-      console.log('Using fallback storage (Firebase disabled)');
-      return fallbackOperation();
-    }
-
-    try {
-      console.log('Attempting Firebase operation...');
-      const result = await firebaseOperation();
-      console.log('Firebase operation successful');
-      return result;
-    } catch (error) {
-      console.error('Firebase operation failed, switching to fallback:', error.message);
-      this.useFirebase = false;
-      return fallbackOperation();
-    }
+    console.log('Firebase-only storage initialized');
   }
 
   async getCollection<T>(collectionName: CollectionName): Promise<T[]> {
-    return this.executeWithFallback(
-      () => this.firebaseStorage.getCollection<T>(collectionName),
-      () => this.fallbackStorage.getCollection<T>(collectionName)
-    );
+    return this.firebaseStorage.getCollection<T>(collectionName);
   }
 
   async getDocument<T>(collectionName: CollectionName, id: string): Promise<T | null> {
-    return this.executeWithFallback(
-      () => this.firebaseStorage.getDocument<T>(collectionName, id),
-      () => this.fallbackStorage.getDocument<T>(collectionName, id)
-    );
+    return this.firebaseStorage.getDocument<T>(collectionName, id);
   }
 
   async createDocument<T>(collectionName: CollectionName, data: any): Promise<T> {
-    return this.executeWithFallback(
-      () => this.firebaseStorage.createDocument<T>(collectionName, data),
-      () => this.fallbackStorage.createDocument<T>(collectionName, data)
-    );
+    return this.firebaseStorage.createDocument<T>(collectionName, data);
   }
 
   async updateDocument<T>(collectionName: CollectionName, id: string, data: any): Promise<T> {
-    return this.executeWithFallback(
-      () => this.firebaseStorage.updateDocument<T>(collectionName, id, data),
-      () => this.fallbackStorage.updateDocument<T>(collectionName, id, data)
-    );
+    return this.firebaseStorage.updateDocument<T>(collectionName, id, data);
   }
 
   async deleteDocument(collectionName: CollectionName, id: string): Promise<void> {
-    return this.executeWithFallback(
-      () => this.firebaseStorage.deleteDocument(collectionName, id),
-      () => this.fallbackStorage.deleteDocument(collectionName, id)
-    );
+    return this.firebaseStorage.deleteDocument(collectionName, id);
   }
 
   async searchCollection<T>(collectionName: CollectionName, query: string, field?: string): Promise<T[]> {
-    return this.executeWithFallback(
-      () => this.firebaseStorage.searchCollection<T>(collectionName, query, field),
-      () => this.fallbackStorage.searchCollection<T>(collectionName, query, field)
-    );
+    return this.firebaseStorage.searchCollection<T>(collectionName, query, field);
   }
 
   // Specific collection methods
@@ -370,4 +312,4 @@ class HybridStorage implements IStorage {
   async createAppLink(link: InsertAppLink): Promise<AppLink> { return this.createDocument('appLinks', link); }
 }
 
-export const storage = new HybridStorage();
+export const storage = new FirebaseOnlyStorage();

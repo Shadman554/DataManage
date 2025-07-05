@@ -98,18 +98,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Test Firebase connection and enable it if successful
+  // Test Firebase connection
   try {
     console.log('Testing Firebase connection...');
     const { db } = await import('./firebase');
     console.log('Firebase connected successfully!');
-    
-    // Enable Firebase in hybrid storage
-    const { storage } = await import('./storage');
-    storage.enableFirebase();
-    console.log('Firebase storage enabled');
+    console.log('Firebase-only storage is active');
   } catch (error: any) {
-    console.error('Firebase connection failed, using fallback storage:', error?.message || error);
+    console.error('Firebase connection failed:', error?.message || error);
+    console.error('⚠️ Application will not work without Firebase connection');
   }
 
   // Run production setup if needed
