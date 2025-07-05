@@ -44,15 +44,15 @@ export function Sidebar({ activeCollection, onCollectionChange, currentView, onV
   };
 
   return (
-    <aside className="hidden md:flex w-64 bg-white shadow-lg flex-shrink-0 border-r border-gray-200 flex-col">
-      <div className="p-6 border-b border-gray-200">
+    <aside className="hidden md:flex w-64 bg-card shadow-lg flex-shrink-0 border-r border-border flex-col">
+      <div className="p-6 border-b border-border">
         <h1 className="text-xl font-bold text-primary">Vet Dictionary</h1>
-        <p className="text-sm text-gray-500">Admin Panel</p>
+        <p className="text-sm text-muted-foreground">Admin Panel</p>
       </div>
       
       <ScrollArea className="flex-1">
         <nav className="mt-6">
-          <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Collections
           </div>
           
@@ -69,8 +69,8 @@ export function Sidebar({ activeCollection, onCollectionChange, currentView, onV
                     variant={isActive ? "secondary" : "ghost"}
                     className={`w-full justify-start px-3 py-2 text-sm font-medium ${
                       isActive 
-                        ? 'text-primary bg-blue-50' 
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'text-primary bg-accent' 
+                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
                     }`}
                     onClick={() => {
                       onCollectionChange(collection);
