@@ -18,21 +18,7 @@ const loginAttempts = new Map<string, { attempts: number; lastAttempt: Date; loc
 const activeSessions = new Map<string, { adminId: string; createdAt: Date; lastActivity: Date; ipAddress: string; userAgent: string }>();
 
 // Fallback storage for when database is unavailable
-const fallbackAdmins: AdminUser[] = [
-  {
-    id: 'super-admin-1',
-    username: 'superadmin',
-    email: 'admin@vet-dict.com',
-    password: '$2b$12$8K1p3z4m5n6o7p8q9r0s1t2u3v4w5x6y7z8a9b0c1d2e3f4g5h6i7j', // SuperAdmin123!
-    role: 'super_admin',
-    firstName: 'Super',
-    lastName: 'Admin',
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastLoginAt: undefined,
-  }
-];
+const fallbackAdmins: AdminUser[] = [];
 
 export interface AuthRequest extends Request {
   admin?: AdminUser;
