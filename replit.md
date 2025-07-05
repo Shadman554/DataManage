@@ -119,9 +119,16 @@ Super admins can view:
 
 ### UI Dependencies
 - **@radix-ui/***: Accessible UI primitives
-- **tailwindcss**: Utility-first CSS framework
+- **tailwindcss**: Utility-first CSS framework with dark mode support
 - **lucide-react**: Icon library
 - **react-dropzone**: File upload functionality
+
+### Dark Mode Support
+- **Theme System**: Comprehensive light/dark/system theme switching
+- **Local Storage**: Theme preference persistence across sessions
+- **System Detection**: Automatic theme based on user's OS preference
+- **Theme Toggle**: Available in all headers and mobile sidebar
+- **Full Coverage**: All components support dark mode with proper contrast
 
 ### Development Dependencies
 - **vite**: Build tool and development server
@@ -167,6 +174,14 @@ The system currently uses a hybrid approach:
 
 ```
 Recent Changes:
+- July 05, 2025: UI/UX: Added comprehensive dark mode support with theme switching
+- July 05, 2025: RESPONSIVE: Fixed mobile responsiveness across all admin components
+- July 05, 2025: ACCESSIBILITY: Fixed dialog accessibility warnings with proper titles and descriptions
+- July 05, 2025: MOBILE: Added Admin Panel button to mobile sidebar System section
+- July 05, 2025: MIGRATION: Successfully migrated from Replit Agent to Replit environment
+- July 05, 2025: DATABASE: Provisioned PostgreSQL database and connected admin authentication
+- July 05, 2025: ADMIN: Created super admin user and enabled full admin functionality
+- July 05, 2025: SECURITY: All admin features now working with proper database backing
 - July 04, 2025: SECURITY: Protected entire application with admin authentication
 - July 04, 2025: Added admin info and logout functionality to main header
 - July 04, 2025: Fixed accessibility warnings for dialog components
