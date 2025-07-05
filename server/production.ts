@@ -14,6 +14,9 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Fix for Railway deployment - ensure __dirname is properly set
+const currentDir = __dirname || process.cwd();
+
 // IP Whitelist for Private Access
 const ALLOWED_IPS = process.env.ALLOWED_IPS 
   ? process.env.ALLOWED_IPS.split(',').map(ip => ip.trim())
@@ -122,9 +125,9 @@ app.set('trust proxy', 1);
   }
 
   // Serve static files in production BEFORE registering API routes
-  const distPath = path.resolve(__dirname, "public");
+  const distPath = path.resolve(currentDir, "public");
   console.log('📁 Serving static files from:', distPath);
-  console.log('📁 Current directory:', __dirname);
+  console.log('📁 Current directory:', currentDir);
   
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));

@@ -20,7 +20,7 @@ try {
   
   // Build backend with production server
   console.log('🔧 Building backend...');
-  execSync('esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist', { stdio: 'inherit', cwd: __dirname });
+  execSync('esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --outfile=dist/index.js', { stdio: 'inherit', cwd: __dirname });
   
   console.log('✅ Build completed successfully');
   
