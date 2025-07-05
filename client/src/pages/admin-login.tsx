@@ -161,15 +161,7 @@ export default function AdminLogin() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Demo credentials:</p>
-              <div className="text-xs text-gray-500 space-y-1">
-                <p><strong>Username:</strong> superadmin</p>
-                <p><strong>Password:</strong> SuperAdmin123!</p>
-              </div>
-            </div>
-          </div>
+
         </CardContent>
       </Card>
     </div>
