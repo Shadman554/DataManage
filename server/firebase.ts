@@ -65,6 +65,7 @@ if (getApps().length === 0) {
     console.log('Initializing Firebase Admin SDK...');
     app = initializeApp({
       credential: cert(serviceAccount as any),
+      projectId: serviceAccount.project_id,
       storageBucket: "vet-dict-93f36.firebasestorage.app",
     });
     console.log('Firebase Admin SDK initialized successfully');
