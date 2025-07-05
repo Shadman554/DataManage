@@ -117,6 +117,7 @@ app.set('trust proxy', 1);
   if (process.env.NODE_ENV === 'production') {
     console.log('🚀 Production environment detected');
     console.log('📊 Database URL configured:', process.env.DATABASE_URL ? 'Yes' : 'No');
+    console.log('🔒 SSL certificate fix enabled for Railway PostgreSQL');
     
     // Check if database tables exist, if not provide instructions
     if (process.env.DATABASE_URL) {
