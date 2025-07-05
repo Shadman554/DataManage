@@ -20,6 +20,30 @@ const activeSessions = new Map<string, { adminId: string; createdAt: Date; lastA
 // Fallback storage for when database is unavailable
 const fallbackAdmins: AdminUser[] = [];
 
+// Initialize fallback admin user
+async function initializeFallbackAdmin() {
+  if (fallbackAdmins.length === 0) {
+    const hashedPassword = await bcrypt.hash('SuperAdmin123!', SALT_ROUNDS);
+    fallbackAdmins.push({
+      id: 'admin_fallback_superadmin',
+      username: 'superadmin',
+      email: 'admin@vet-dict.com',
+      password: hashedPassword,
+      role: 'super_admin',
+      firstName: 'Super',
+      lastName: 'Admin',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastLoginAt: null
+    });
+    console.log('✓ Fallback super admin user initialized');
+  }
+}
+
+// Initialize fallback admin on module load
+initializeFallbackAdmin().catch(console.error);
+
 export interface AuthRequest extends Request {
   admin?: AdminUser;
 }
