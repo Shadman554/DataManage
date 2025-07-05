@@ -121,9 +121,11 @@ app.set('trust proxy', 1);
   }
 
   // Serve static files in production BEFORE registering API routes
-  const distPath = path.resolve(currentDir, "public");
+  const distPath = path.join(currentDir, "public");
   console.log('📁 Serving static files from:', distPath);
   console.log('📁 Current directory:', currentDir);
+  console.log('📁 Directory exists:', fs.existsSync(currentDir));
+  console.log('📁 Public directory exists:', fs.existsSync(distPath));
   
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
@@ -148,7 +150,23 @@ app.set('trust proxy', 1);
       if (req.path.startsWith('/api/')) {
         return res.status(404).json({ error: 'API endpoint not found', path: req.path });
       }
-      res.sendFile(path.resolve(distPath, "index.html"));
+      
+      const indexPath = path.join(distPath, "index.html");
+      console.log('📄 Serving index.html from:', indexPath);
+      
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).json({ error: 'Frontend not found' });
+      }
+    });
+  } else {
+    // Fallback when no static files exist
+    app.use("*", (req, res) => {
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found', path: req.path });
+      }
+      res.status(404).json({ error: 'Application not properly built' });
     });
   }
 
