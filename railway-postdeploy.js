@@ -19,7 +19,7 @@ async function runPostDeploy() {
     
     // Create super admin
     console.log('👤 Creating super admin account...');
-    execSync('node create-super-admin.js', { stdio: 'inherit' });
+    execSync('tsx create-super-admin.js', { stdio: 'inherit' });
     
     console.log('✅ Railway post-deployment setup completed!');
     
