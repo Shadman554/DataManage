@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { db } from './db';
 import { adminUsers, adminSessions, activityLogs } from '@shared/schema';
 import { eq, and, gt } from 'drizzle-orm';
@@ -103,14 +104,12 @@ export class SecureAuthService {
 
   // Generate cryptographically secure token
   static generateSecureToken(): string {
-    const crypto = require('crypto');
     return crypto.randomBytes(32).toString('hex');
   }
 
   // Generate ultra-secure JWT with session binding
   static generateToken(adminId: string, ipAddress: string, userAgent: string): string {
     const sessionId = this.generateSecureToken();
-    const crypto = require('crypto');
     
     const tokenPayload = {
       adminId,
@@ -140,7 +139,7 @@ export class SecureAuthService {
   // Verify token with session hijacking protection
   static verifyToken(token: string, ipAddress: string, userAgent: string): { adminId: string; sessionId: string } | null {
     try {
-      const crypto = require('crypto');
+
       const decoded = jwt.verify(token, JWT_SECRET, {
         issuer: 'vet-dict-admin',
         audience: 'vet-dict-admin-panel'
@@ -263,7 +262,7 @@ export class SecureAuthService {
           .update(adminUsers)
           .set({ lastLoginAt: new Date() })
           .where(eq(adminUsers.id, admin.id));
-      } else {
+      } else if (admin) {
         const fallbackAdmin = fallbackAdmins.find(a => a.id === admin.id);
         if (fallbackAdmin) {
           fallbackAdmin.lastLoginAt = new Date();
@@ -321,7 +320,7 @@ export class SecureAuthService {
     const now = Date.now();
     let cleanedCount = 0;
 
-    for (const [sessionId, session] of activeSessions.entries()) {
+    for (const [sessionId, session] of Array.from(activeSessions.entries())) {
       if (now - session.lastActivity.getTime() > SESSION_TIMEOUT) {
         activeSessions.delete(sessionId);
         cleanedCount++;
