@@ -23,6 +23,11 @@ app.use((req, res, next) => {
     return next();
   }
   
+  // Allow health checks to pass through
+  if (req.path === '/') {
+    return next();
+  }
+  
   const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
   
   // Check if IP is in whitelist

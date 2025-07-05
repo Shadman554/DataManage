@@ -1,5 +1,9 @@
 [phases.setup]
+<<<<<<< HEAD
 nixPkgs = ['nodejs-18_x']
+=======
+nixPkgs = ['nodejs-18_x', 'npm-9_x']
+>>>>>>> 0c02364 (Provide clear instructions for deploying the application to Railway)
 
 [phases.install]
 cmds = ['npm ci']
