@@ -22,6 +22,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+  // One-time database setup endpoint for Railway
+  app.get('/setup-database', async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      
+      // Create admin_users table
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS admin_users (
+          id TEXT PRIMARY KEY,
+          username TEXT UNIQUE NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'admin',
+          "fullName" TEXT NOT NULL,
+          "isActive" BOOLEAN NOT NULL DEFAULT true,
+          "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // Create admin_sessions table
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS admin_sessions (
+          id TEXT PRIMARY KEY,
+          "adminId" TEXT NOT NULL,
+          "sessionToken" TEXT NOT NULL,
+          "expiresAt" TIMESTAMP NOT NULL,
+          "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "lastActivity" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "ipAddress" TEXT,
+          "userAgent" TEXT
+        )
+      `);
+      
+      // Create activity_logs table
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS activity_logs (
+          id TEXT PRIMARY KEY,
+          "adminId" TEXT NOT NULL,
+          action TEXT NOT NULL,
+          collection TEXT NOT NULL,
+          "documentId" TEXT,
+          "documentTitle" TEXT,
+          "beforeData" TEXT,
+          "afterData" TEXT,
+          "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "ipAddress" TEXT,
+          "userAgent" TEXT
+        )
+      `);
+      
+      // Insert super admin if not exists
+      await db.execute(`
+        INSERT INTO admin_users (id, username, email, password, role, "fullName", "isActive", "createdAt", "updatedAt")
+        SELECT 
+          'super-admin-001',
+          'superadmin',
+          'admin@vet-dict.com',
+          '$2b$12$LQv3c1yqBwEHFSjHqg8XjuLpP6bWLhxoKGJcqOL3fEQRXgzgJxzfO',
+          'super_admin',
+          'Super Administrator',
+          true,
+          CURRENT_TIMESTAMP,
+          CURRENT_TIMESTAMP
+        WHERE NOT EXISTS (SELECT 1 FROM admin_users WHERE username = 'superadmin')
+      `);
+      
+      res.json({ 
+        success: true, 
+        message: 'Database setup completed successfully!',
+        login: {
+          username: 'superadmin',
+          password: 'SuperAdmin123!'
+        }
+      });
+    } catch (error) {
+      console.error('Database setup failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message,
+        message: 'Database setup failed. Check logs for details.'
+      });
+    }
+  });
+
   // ===== ADMIN AUTHENTICATION ROUTES =====
   
   // Admin login
