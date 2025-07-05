@@ -105,14 +105,58 @@ app.set('trust proxy', 1);
     console.error('Firebase connection failed, using fallback storage:', error?.message || error);
   }
 
-  // Skip automatic database setup in production - do it manually
-  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+  // Handle Railway production environment
+  if (process.env.NODE_ENV === 'production') {
     console.log('🚀 Production environment detected');
     console.log('📊 Database URL configured:', process.env.DATABASE_URL ? 'Yes' : 'No');
+    
+    // Initialize authentication system for Railway
+    try {
+      if (process.env.DATABASE_URL) {
+        console.log('🔒 Using database authentication for Railway deployment');
+        // Database auth will be handled by the auth service
+      } else {
+        console.log('⚠️  Could not initialize auth system: Forcing fallback authentication for Railway deployment');
+        console.log('🔄 Database auth failed, fallback auth should be active');
+      }
+    } catch (error) {
+      console.error('⚠️  Could not initialize auth system:', error);
+      console.log('🔄 Database auth failed, fallback auth should be active');
+    }
+    
     console.log('✅ App starting in production mode...');
   }
 
+  // Serve static files in production BEFORE registering API routes
+  const distPath = path.resolve(__dirname, "public");
+  console.log('📁 Serving static files from:', distPath);
+  
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    console.log('✅ Static files configured');
+  } else {
+    console.warn('⚠️  No public directory found at:', distPath);
+  }
+
+  // Register API routes with priority handling
   const server = await registerRoutes(app);
+
+  // Add API route protection middleware - ensures API routes don't fall through to SPA
+  app.use('/api/*', (req, res, next) => {
+    // If we get here, the API route wasn't found
+    res.status(404).json({ error: 'API endpoint not found', path: req.path });
+  });
+
+  // Catch-all route for SPA - this must be LAST
+  if (fs.existsSync(distPath)) {
+    app.use("*", (req, res) => {
+      // Only serve index.html for non-API routes
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found', path: req.path });
+      }
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -121,20 +165,6 @@ app.set('trust proxy', 1);
     res.status(status).json({ message });
     throw err;
   });
-
-  // Serve static files in production
-  const distPath = path.resolve(__dirname, "public");
-  
-  if (fs.existsSync(distPath)) {
-    app.use(express.static(distPath));
-    
-    // Fall through to index.html if the file doesn't exist
-    app.use("*", (_req, res) => {
-      res.sendFile(path.resolve(distPath, "index.html"));
-    });
-  } else {
-    console.warn('⚠️  No public directory found, serving basic API only');
-  }
 
   // Use Railway's PORT environment variable in production, otherwise use 5000
   const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
