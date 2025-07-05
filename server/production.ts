@@ -10,12 +10,8 @@ import fs from "fs";
 
 const app = express();
 
-// Get current directory path in a way that works in bundled code
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Fix for Railway deployment - ensure __dirname is properly set
-const currentDir = __dirname || process.cwd();
+// Fix for Railway deployment - use process.cwd() directly for bundled code
+const currentDir = process.cwd();
 
 // IP Whitelist for Private Access
 const ALLOWED_IPS = process.env.ALLOWED_IPS 
