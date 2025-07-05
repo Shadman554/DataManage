@@ -44,31 +44,92 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working', timestamp: new Date().toISOString() });
 });
 
-// Basic auth routes (simplified for testing)
-app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  // Simple hardcoded check for testing
-  if (username === 'superadmin' && password === 'SuperAdmin123!') {
-    res.cookie("adminToken", "test-token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+// Import the actual authentication system
+async function initializeAuth() {
+  try {
+    // Import the authentication module
+    const authModule = await import('./auth.js');
+    const { SecureAuthService } = authModule;
     
-    res.json({
-      admin: {
-        id: '1',
-        username: 'superadmin',
-        email: 'admin@vet-dict.com',
-        role: 'super_admin'
+    // Real authentication endpoint
+    app.post('/api/admin/login', async (req, res) => {
+      try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+          return res.status(400).json({ error: 'Username and password required' });
+        }
+        
+        const result = await SecureAuthService.login(username, password, req);
+        
+        if ('error' in result) {
+          return res.status(401).json({ 
+            error: result.error,
+            remainingTime: result.remainingTime 
+          });
+        }
+
+        const { admin, token } = result;
+        
+        // Set HTTP-only cookie
+        res.cookie("adminToken", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          maxAge: 24 * 60 * 60 * 1000,
+        });
+
+        res.json({ admin });
+        
+      } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
       }
     });
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
+    
+    // Admin profile endpoint
+    app.get('/api/admin/profile', async (req, res) => {
+      try {
+        const token = req.cookies.adminToken;
+        
+        if (!token) {
+          return res.status(401).json({ error: 'No token provided' });
+        }
+        
+        const ipAddress = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+        const userAgent = req.get('User-Agent') || '';
+        
+        const session = SecureAuthService.verifyToken(token, ipAddress, userAgent);
+        
+        if (!session) {
+          return res.status(401).json({ error: 'Invalid or expired session' });
+        }
+        
+        const admin = await SecureAuthService.getAdminById(session.adminId);
+        
+        if (!admin) {
+          return res.status(401).json({ error: 'Admin not found' });
+        }
+        
+        res.json({ admin });
+        
+      } catch (error) {
+        console.error('Profile error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+    console.log('✅ Authentication system initialized');
+    
+  } catch (error) {
+    console.error('⚠️  Could not initialize auth system:', error.message);
+    
+    // Fallback authentication
+    app.post('/api/admin/login', (req, res) => {
+      res.status(500).json({ error: 'Authentication system unavailable' });
+    });
   }
-});
+}
 
 // Serve static files
 const distPath = path.resolve(__dirname, "..", "dist", "public");
@@ -106,13 +167,25 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const server = createServer(app);
+// Initialize authentication and start server
+async function startServer() {
+  // Initialize authentication system
+  await initializeAuth();
+  
+  const server = createServer(app);
+  
+  // Use Railway's PORT
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+  
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`🚀 Server running on port ${port}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🗄️  Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
+  });
+}
 
-// Use Railway's PORT
-const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-
-server.listen(port, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${port}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🗄️  Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
+// Start the server
+startServer().catch(error => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });
