@@ -8,7 +8,7 @@ import {
   insertNotificationSchema, insertUserSchema, insertNormalRangeSchema,
   insertAppLinkSchema, type CollectionName, loginSchema, insertAdminUserSchema
 } from "@shared/schema";
-import { AuthService, authenticateAdmin, requireSuperAdmin, logActivity, type AuthRequest } from "./auth";
+import { AuthService, authenticateAdmin, requireSuperAdmin, type AuthRequest } from "./auth";
 import cookieParser from "cookie-parser";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -25,8 +25,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { username, password } = loginSchema.parse(req.body);
       
       const result = await AuthService.login(username, password, req);
-      if (!result) {
-        return res.status(401).json({ error: "Invalid username or password" });
+      
+      // Handle error responses from secure auth
+      if ('error' in result) {
+        return res.status(401).json({ 
+          error: result.error,
+          remainingTime: result.remainingTime 
+        });
       }
 
       const { admin, token } = result;
@@ -296,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/collections/:collection", authenticateAdmin, logActivity('create', 'collection'), async (req, res) => {
+  app.post("/api/collections/:collection", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const collection = req.params.collection as CollectionName;
       const data = req.body;
@@ -342,6 +347,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const result = await storage.createDocument(collection, validatedData);
+      
+      // Log activity
+      if (req.admin) {
+        const documentTitle = (validatedData as any).title || (validatedData as any).name || (validatedData as any).english || (validatedData as any).username || 'Untitled';
+        await AuthService.logActivity({
+          adminId: req.admin.id,
+          action: 'create',
+          collection: collection,
+          documentId: (result as any).id,
+          documentTitle,
+          newData: JSON.stringify(result),
+          ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent') || 'unknown',
+        }).catch(console.error);
+      }
+      
       res.json(result);
     } catch (error) {
       console.error("Error creating document:", error);
@@ -349,25 +370,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/collections/:collection/:id", authenticateAdmin, logActivity('update', 'collection'), async (req, res) => {
+  app.put("/api/collections/:collection/:id", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const collection = req.params.collection as CollectionName;
       const id = req.params.id;
       const data = req.body;
       
+      // Get old data for logging
+      const oldData = await storage.getDocument(collection, id);
+      
       const result = await storage.updateDocument(collection, id, data);
+      
+      // Log activity
+      if (req.admin) {
+        const documentTitle = (data as any).title || (data as any).name || (data as any).english || (data as any).username || 'Untitled';
+        await AuthService.logActivity({
+          adminId: req.admin.id,
+          action: 'update',
+          collection: collection,
+          documentId: id,
+          documentTitle,
+          oldData: oldData ? JSON.stringify(oldData) : undefined,
+          newData: JSON.stringify(result),
+          ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent') || 'unknown',
+        }).catch(console.error);
+      }
+      
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: "Failed to update document" });
     }
   });
 
-  app.delete("/api/collections/:collection/:id", authenticateAdmin, logActivity('delete', 'collection'), async (req, res) => {
+  app.delete("/api/collections/:collection/:id", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const collection = req.params.collection as CollectionName;
       const id = req.params.id;
       
+      // Get data before deletion for logging
+      const oldData = await storage.getDocument(collection, id);
+      
       await storage.deleteDocument(collection, id);
+      
+      // Log activity
+      if (req.admin && oldData) {
+        const documentTitle = (oldData as any).title || (oldData as any).name || (oldData as any).english || (oldData as any).username || 'Untitled';
+        await AuthService.logActivity({
+          adminId: req.admin.id,
+          action: 'delete',
+          collection: collection,
+          documentId: id,
+          documentTitle,
+          oldData: JSON.stringify(oldData),
+          ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent') || 'unknown',
+        }).catch(console.error);
+      }
+      
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete document" });
