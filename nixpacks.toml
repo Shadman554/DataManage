@@ -1,5 +1,9 @@
 [phases.setup]
+<<<<<<< HEAD
 nixPkgs = ['nodejs-18_x']
+=======
+nixPkgs = ['nodejs-18_x', 'npm-9_x']
+>>>>>>> 2f70103e50973b00246c7ba7acc0b67a36e58760
 
 [phases.install]
 cmds = ['npm ci']

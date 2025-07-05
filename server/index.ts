@@ -23,6 +23,11 @@ app.use((req, res, next) => {
     return next();
   }
   
+  // Allow health checks to pass through
+  if (req.path === '/') {
+    return next();
+  }
+  
   const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
   
   // Check if IP is in whitelist
@@ -107,11 +112,31 @@ app.use((req, res, next) => {
     console.error('Firebase connection failed, using fallback storage:', error?.message || error);
   }
 
+<<<<<<< HEAD
   // Run production setup if needed (simplified for Railway)
   if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
     console.log('🚀 Production environment detected');
     console.log('📊 Database URL configured:', process.env.DATABASE_URL ? 'Yes' : 'No');
     console.log('✅ App starting in production mode...');
+=======
+  // Run production setup if needed
+  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+    try {
+      console.log('🚀 Running production setup...');
+      const { execSync } = await import('child_process');
+      
+      console.log('📊 Running database migrations...');
+      execSync('npm run db:push', { stdio: 'inherit' });
+      
+      console.log('👤 Creating super admin account...');
+      execSync('node create-super-admin.js', { stdio: 'inherit' });
+      
+      console.log('✅ Production setup completed successfully!');
+    } catch (error: any) {
+      console.error('⚠️  Production setup warning:', error?.message || error);
+      console.log('Continuing with server startup...');
+    }
+>>>>>>> 2f70103e50973b00246c7ba7acc0b67a36e58760
   }
 
   const server = await registerRoutes(app);

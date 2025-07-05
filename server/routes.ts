@@ -17,6 +17,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add cookie parser middleware
   app.use(cookieParser());
 
+  // Health check endpoint
+  app.get('/', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   // ===== ADMIN AUTHENTICATION ROUTES =====
   
   // Admin login
