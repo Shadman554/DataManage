@@ -29,8 +29,13 @@ if (!databaseUrl) {
     pool = new PgPool({ 
       connectionString: databaseUrl,
       ssl: {
-        rejectUnauthorized: false
-      }
+        rejectUnauthorized: false,
+        checkServerIdentity: () => undefined
+      },
+      // Additional Railway-specific settings
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     });
     db = drizzlePg(pool, { schema });
   }

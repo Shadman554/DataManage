@@ -25,10 +25,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // One-time database setup endpoint for Railway
   app.get('/setup-database', async (req, res) => {
     try {
-      const { db } = await import('./db');
+      // Use direct PostgreSQL connection with enhanced SSL handling
+      const { Pool } = await import('pg');
+      const databaseUrl = process.env.DATABASE_URL;
+      
+      if (!databaseUrl) {
+        throw new Error('DATABASE_URL not configured');
+      }
+      
+      // Enhanced SSL configuration for Railway
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: {
+          rejectUnauthorized: false,
+          checkServerIdentity: () => undefined
+        },
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 15000,
+      });
+      
+      // Test connection
+      await pool.query('SELECT NOW()');
       
       // Create admin_users table
-      await db.execute(`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS admin_users (
           id TEXT PRIMARY KEY,
           username TEXT UNIQUE NOT NULL,
@@ -36,6 +57,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           password TEXT NOT NULL,
           role TEXT NOT NULL DEFAULT 'admin',
           "fullName" TEXT NOT NULL,
+          "firstName" TEXT,
+          "lastName" TEXT,
           "isActive" BOOLEAN NOT NULL DEFAULT true,
           "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -43,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
       
       // Create admin_sessions table
-      await db.execute(`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS admin_sessions (
           id TEXT PRIMARY KEY,
           "adminId" TEXT NOT NULL,
@@ -57,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
       
       // Create activity_logs table
-      await db.execute(`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS activity_logs (
           id TEXT PRIMARY KEY,
           "adminId" TEXT NOT NULL,
@@ -73,21 +96,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
       `);
       
-      // Insert super admin if not exists
-      await db.execute(`
-        INSERT INTO admin_users (id, username, email, password, role, "fullName", "isActive", "createdAt", "updatedAt")
-        SELECT 
+      // Check if super admin exists
+      const existingAdmin = await pool.query('SELECT id FROM admin_users WHERE username = $1', ['superadmin']);
+      
+      if (existingAdmin.rows.length === 0) {
+        // Insert super admin
+        await pool.query(`
+          INSERT INTO admin_users (id, username, email, password, role, "fullName", "firstName", "lastName", "isActive", "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `, [
           'super-admin-001',
           'superadmin',
           'admin@vet-dict.com',
-          '$2b$12$LQv3c1yqBwEHFSjHqg8XjuLpP6bWLhxoKGJcqOL3fEQRXgzgJxzfO',
+          '$2b$12$LQv3c1yqBwEHFSjHqg8XjuLpP6bWLhxoKGJcqOL3fEQRXgzgJxzfO', // SuperAdmin123!
           'super_admin',
           'Super Administrator',
-          true,
-          CURRENT_TIMESTAMP,
-          CURRENT_TIMESTAMP
-        WHERE NOT EXISTS (SELECT 1 FROM admin_users WHERE username = 'superadmin')
-      `);
+          'Super',
+          'Administrator',
+          true
+        ]);
+      }
+      
+      await pool.end();
       
       res.json({ 
         success: true, 
