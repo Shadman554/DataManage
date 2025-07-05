@@ -25,6 +25,8 @@ try {
     } catch (error) {
       console.warn('⚠️  Database setup failed, continuing with app start:', error.message);
     }
+  } else {
+    console.log('⚠️  No DATABASE_URL found, skipping database setup');
   }
   
   // Start the production server

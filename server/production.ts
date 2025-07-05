@@ -110,18 +110,12 @@ app.set('trust proxy', 1);
     console.log('🚀 Production environment detected');
     console.log('📊 Database URL configured:', process.env.DATABASE_URL ? 'Yes' : 'No');
     
-    // Initialize authentication system for Railway
-    try {
-      if (process.env.DATABASE_URL) {
-        console.log('🔒 Using database authentication for Railway deployment');
-        // Database auth will be handled by the auth service
-      } else {
-        console.log('⚠️  Could not initialize auth system: Forcing fallback authentication for Railway deployment');
-        console.log('🔄 Database auth failed, fallback auth should be active');
-      }
-    } catch (error) {
-      console.error('⚠️  Could not initialize auth system:', error);
-      console.log('🔄 Database auth failed, fallback auth should be active');
+    // Check if database tables exist, if not provide instructions
+    if (process.env.DATABASE_URL) {
+      console.log('🔒 Using database authentication for Railway deployment');
+      console.log('📋 Make sure database tables are created using railway-db-setup.sql');
+    } else {
+      console.log('⚠️  No DATABASE_URL found, using fallback authentication');
     }
     
     console.log('✅ App starting in production mode...');
@@ -130,6 +124,7 @@ app.set('trust proxy', 1);
   // Serve static files in production BEFORE registering API routes
   const distPath = path.resolve(__dirname, "public");
   console.log('📁 Serving static files from:', distPath);
+  console.log('📁 Current directory:', __dirname);
   
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));

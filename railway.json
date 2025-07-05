@@ -1,10 +1,10 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "node build-railway.js"
+    "buildCommand": "npm run build"
   },
   "deploy": {
-    "startCommand": "node start-railway.js",
+    "startCommand": "npm run start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

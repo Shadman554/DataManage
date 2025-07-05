@@ -2,7 +2,7 @@
 
 ## Quick Fix for Current Issue
 
-The "Unexpected token '<', '<!DOCTYPE'..." error occurs because API routes are returning HTML instead of JSON. This is fixed in the updated production configuration.
+The module import errors are fixed. Follow these steps:
 
 ## Deploy Steps
 
@@ -12,22 +12,30 @@ The "Unexpected token '<', '<!DOCTYPE'..." error occurs because API routes are r
    - `DATABASE_URL=your-postgres-connection-string`
    - `JWT_SECRET=your-secure-jwt-secret`
    
-3. **Redeploy the application**
+3. **Set up the database manually:**
+   - Go to your Railway PostgreSQL database
+   - Run the SQL from `railway-db-setup.sql` file
+   - This creates the admin tables and super admin account
+
+4. **Redeploy the application**
 
 ## What's Fixed
 
+- ✅ Module import errors resolved
 - ✅ API routes now properly return JSON instead of HTML
 - ✅ Static files served correctly
 - ✅ PostgreSQL database integration
 - ✅ Admin authentication system
 - ✅ Proper production error handling
 
-## Database Setup
+## Database Setup (Manual)
 
-The application will automatically:
-- Create the required database tables
-- Set up the super admin account
-- Initialize the authentication system
+Since the automatic setup has import issues, manually run this SQL in your Railway PostgreSQL database:
+
+```sql
+-- Copy and paste the contents of railway-db-setup.sql
+-- This creates the admin tables and super admin account
+```
 
 ## Default Admin Credentials
 
