@@ -17,8 +17,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add cookie parser middleware
   app.use(cookieParser());
 
-  // Health check endpoint
-  app.get('/', (req, res) => {
+  // Health check endpoint (using different path to avoid interfering with frontend)
+  app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 

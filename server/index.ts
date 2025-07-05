@@ -24,7 +24,7 @@ app.use((req, res, next) => {
   }
   
   // Allow health checks to pass through
-  if (req.path === '/') {
+  if (req.path === '/health') {
     return next();
   }
   
